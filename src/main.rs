@@ -4,6 +4,7 @@ use controls::ControlsPlugin;
 
 mod board;
 mod controls;
+mod logic;
 
 fn main() {
     App::new()
