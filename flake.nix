@@ -33,12 +33,8 @@
         # crane define src
         src = craneLib.cleanCargoSource ./.;
 
-        # define system args
-        nativeBuildInputs = with pkgs; [
-          pkg-config
-        ];
-
         buildInputs = with pkgs; [
+          pkg-config
           openssl
           python310
           udev alsa-lib vulkan-loader
@@ -51,7 +47,7 @@
 
         # build artifacts
         commonArgs = {
-          inherit src buildInputs nativeBuildInputs LD_LIBRARY_PATH;
+          inherit src buildInputs;
         };
 
         cargoArtifacts = craneLib.buildDepsOnly commonArgs;
@@ -63,9 +59,12 @@
     with pkgs;
     {
       devShells.default = mkShell {
+        inherit LD_LIBRARY_PATH;
+
         inputsFrom = [ bin ];
       };
       packages = {
+        inherit LD_LIBRARY_PATH;
         inherit bin;
         default = bin;
       };

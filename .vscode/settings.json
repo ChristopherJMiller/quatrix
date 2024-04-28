@@ -1,3 +1,17 @@
 {
-    "nixEnvSelector.suggestion": false
+    "editor.formatOnSave": true,
+    "rust-analyzer.files.excludeDirs": [
+        ".direnv"
+    ],
+    "rust-analyzer.runnables.command": "nix develop --command cargo",
+    "rust-analyzer.check.overrideCommand": [
+        "nix",
+        "develop",
+        "--command",
+        "cargo",
+        "check",
+        "--workspace",
+        "--message-format=json",
+        "--all-targets"
+    ]
 }
