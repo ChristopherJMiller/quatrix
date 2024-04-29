@@ -88,8 +88,6 @@ impl InsertionDirection {
                 InsertionDirection::FromBottom | InsertionDirection::FromRight => 0,
             };
 
-            println!("Defaulting using {default_placement}");
-
             slice[default_placement] = 1;
         }
 

@@ -43,6 +43,26 @@ impl GameBoard {
 
         Ok(())
     }
+
+    pub fn rotate_right(&mut self) {
+        let mut board = self.board.transpose();
+
+        let width = self.board.ncols();
+        let half_width = width / 2;
+
+        (0..half_width).for_each(|i| board.swap_columns(i, width - i - 1));
+
+        self.board = board;
+    }
+
+    pub fn rotate_left(&mut self) {
+        let width = self.board.ncols();
+        let half_width = width / 2;
+
+        (0..half_width).for_each(|i| self.board.swap_columns(i, width - i - 1));
+
+        self.board = self.board.transpose();
+    }
 }
 
 #[cfg(test)]
@@ -153,6 +173,98 @@ mod tests {
                 RowDVector::from_vec(vec![0, 0, 0]),
                 RowDVector::from_vec(vec![1, 0, 0]),
                 RowDVector::from_vec(vec![1, 1, 0]),
+            ])
+        );
+    }
+
+    #[test]
+    pub fn verify_rotate_right() {
+        let mut game_board = GameBoard::new(3);
+
+        game_board.place(1).unwrap();
+        game_board.place(2).unwrap();
+        game_board.place(3).unwrap();
+
+        assert_eq!(
+            game_board.board(),
+            &DMatrix::from_rows(&[
+                RowDVector::from_vec(vec![1, 0, 0]),
+                RowDVector::from_vec(vec![0, 0, 0]),
+                RowDVector::from_vec(vec![0, 1, 1]),
+            ])
+        );
+
+        game_board.rotate_right();
+
+        assert_eq!(
+            game_board.board(),
+            &DMatrix::from_rows(&[
+                RowDVector::from_vec(vec![0, 0, 1]),
+                RowDVector::from_vec(vec![1, 0, 0]),
+                RowDVector::from_vec(vec![1, 0, 0]),
+            ])
+        );
+    }
+
+    #[test]
+    pub fn verify_rotate_right_large() {
+        let mut game_board = GameBoard::new(5);
+
+        game_board.place(1).unwrap();
+        game_board.place(2).unwrap();
+        game_board.place(3).unwrap();
+        game_board.place(3).unwrap();
+
+        assert_eq!(
+            game_board.board(),
+            &DMatrix::from_rows(&[
+                RowDVector::from_vec(vec![0, 0, 0, 0, 0]),
+                RowDVector::from_vec(vec![0, 0, 0, 0, 0]),
+                RowDVector::from_vec(vec![0, 0, 0, 0, 0]),
+                RowDVector::from_vec(vec![0, 0, 0, 1, 0]),
+                RowDVector::from_vec(vec![0, 1, 1, 1, 0]),
+            ])
+        );
+
+        game_board.rotate_right();
+
+        assert_eq!(
+            game_board.board(),
+            &DMatrix::from_rows(&[
+                RowDVector::from_vec(vec![0, 0, 0, 0, 0]),
+                RowDVector::from_vec(vec![1, 0, 0, 0, 0]),
+                RowDVector::from_vec(vec![1, 0, 0, 0, 0]),
+                RowDVector::from_vec(vec![1, 1, 0, 0, 0]),
+                RowDVector::from_vec(vec![0, 0, 0, 0, 0]),
+            ])
+        );
+    }
+
+    #[test]
+    pub fn verify_rotate_left() {
+        let mut game_board = GameBoard::new(3);
+
+        game_board.place(1).unwrap();
+        game_board.place(2).unwrap();
+        game_board.place(3).unwrap();
+
+        assert_eq!(
+            game_board.board(),
+            &DMatrix::from_rows(&[
+                RowDVector::from_vec(vec![1, 0, 0]),
+                RowDVector::from_vec(vec![0, 0, 0]),
+                RowDVector::from_vec(vec![0, 1, 1]),
+            ])
+        );
+
+        game_board.rotate_left();
+
+        assert_eq!(
+            game_board.board(),
+            &DMatrix::from_rows(&[
+                RowDVector::from_vec(vec![0, 0, 1]),
+                RowDVector::from_vec(vec![0, 0, 1]),
+                RowDVector::from_vec(vec![1, 0, 0]),
             ])
         );
     }
