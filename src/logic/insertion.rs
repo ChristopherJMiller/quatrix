@@ -11,6 +11,23 @@ pub enum InsertionDirection {
 }
 
 impl InsertionDirection {
+    pub fn get_side_index(&self, board: &DMatrix<u8>, slot: usize) -> usize {
+        let passed_slots = match self {
+            InsertionDirection::FromTop => 0,
+            InsertionDirection::FromRight => board.ncols(),
+            InsertionDirection::FromBottom => board.ncols() + board.nrows(),
+            InsertionDirection::FromLeft => board.ncols() + board.nrows() + board.ncols(),
+        };
+
+        let result = slot - passed_slots;
+
+        match self {
+            InsertionDirection::FromBottom => board.nrows().saturating_sub(result + 1),
+            InsertionDirection::FromLeft => board.ncols().saturating_sub(result + 1),
+            _ => result,
+        }
+    }
+
     pub fn for_board_insertion(
         board: &DMatrix<u8>,
         slot: usize,
@@ -38,6 +55,45 @@ impl InsertionDirection {
         }
 
         Err(GameError::InvalidPlacementLocation(slot))
+    }
+
+    pub fn place(&self, slice: &mut [u8]) -> Result<(), GameError> {
+        let first_one_found = match self {
+            InsertionDirection::FromTop | InsertionDirection::FromLeft => {
+                slice.iter().position(|&x| x == 1)
+            }
+            InsertionDirection::FromBottom | InsertionDirection::FromRight => slice
+                .iter()
+                .rev()
+                .position(|&x| x == 1)
+                .map(|x| slice.len() - x - 1),
+        };
+
+        if let Some(one_found) = first_one_found {
+            let space_behind = if one_found > 1 {
+                slice.get(one_found - 1).map(|&x| x == 0).is_some_and(|x| x)
+            } else {
+                false
+            };
+            let space_ahead = slice.get(one_found + 1).map(|&x| x == 0).is_some_and(|x| x);
+
+            if space_behind {
+                slice[one_found - 1] = 1;
+            } else if space_ahead {
+                slice[one_found + 1] = 1;
+            }
+        } else {
+            let default_placement = match self {
+                InsertionDirection::FromTop | InsertionDirection::FromLeft => slice.len() - 1,
+                InsertionDirection::FromBottom | InsertionDirection::FromRight => 0,
+            };
+
+            println!("Defaulting using {default_placement}");
+
+            slice[default_placement] = 1;
+        }
+
+        Ok(())
     }
 }
 
@@ -127,5 +183,26 @@ mod tests {
                     assert!(direction.is_err());
                 });
         });
+    }
+
+    #[test]
+    pub fn verify_get_side_index() {
+        let board: DMatrix<u8> = DMatrix::zeros(3, 3);
+
+        assert_eq!(InsertionDirection::FromTop.get_side_index(&board, 0), 0);
+        assert_eq!(InsertionDirection::FromTop.get_side_index(&board, 1), 1);
+        assert_eq!(InsertionDirection::FromTop.get_side_index(&board, 2), 2);
+
+        assert_eq!(InsertionDirection::FromRight.get_side_index(&board, 3), 0);
+        assert_eq!(InsertionDirection::FromRight.get_side_index(&board, 4), 1);
+        assert_eq!(InsertionDirection::FromRight.get_side_index(&board, 5), 2);
+
+        assert_eq!(InsertionDirection::FromBottom.get_side_index(&board, 6), 2);
+        assert_eq!(InsertionDirection::FromBottom.get_side_index(&board, 7), 1);
+        assert_eq!(InsertionDirection::FromBottom.get_side_index(&board, 8), 0);
+
+        assert_eq!(InsertionDirection::FromLeft.get_side_index(&board, 9), 2);
+        assert_eq!(InsertionDirection::FromLeft.get_side_index(&board, 10), 1);
+        assert_eq!(InsertionDirection::FromLeft.get_side_index(&board, 11), 0);
     }
 }
