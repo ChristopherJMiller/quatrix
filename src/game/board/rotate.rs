@@ -1,12 +1,9 @@
-use bevy::{
-    prelude::*,
-    sprite::{MaterialMesh2dBundle, Mesh2dHandle},
+use bevy::prelude::*;
+
+use super::{
+    super::controls::{RotateLeftPressed, RotateRightPressed},
+    Board,
 };
-
-use crate::controls::{RotateLeftPressed, RotateRightPressed};
-
-#[derive(Component)]
-pub struct Board;
 
 #[derive(Component)]
 pub struct RotateBoard {
@@ -47,25 +44,6 @@ impl RotateBoard {
 
         result
     }
-}
-
-fn setup_board(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
-    let mesh = meshes.add(Rectangle::new(200.0, 200.0));
-
-    let color = Color::rgb(1.0, 1.0, 1.0);
-
-    commands
-        .spawn(MaterialMesh2dBundle {
-            mesh: Mesh2dHandle(mesh),
-            material: materials.add(color),
-            transform: Transform::default(),
-            ..default()
-        })
-        .insert(Board);
 }
 
 fn handle_rotate_events(
@@ -115,11 +93,10 @@ fn rotate_board(
     }
 }
 
-pub struct BoardPlugin;
+pub struct RotateBoardPlugin;
 
-impl Plugin for BoardPlugin {
+impl Plugin for RotateBoardPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup_board)
-            .add_systems(Update, (handle_rotate_events, rotate_board).chain());
+        app.add_systems(Update, (handle_rotate_events, rotate_board).chain());
     }
 }

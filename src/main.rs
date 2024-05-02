@@ -1,15 +1,13 @@
 use bevy::prelude::*;
-use board::BoardPlugin;
-use controls::ControlsPlugin;
+use game::GamePlugins;
 
-mod board;
-mod controls;
+mod game;
 mod logic;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins((ControlsPlugin, BoardPlugin))
+        .add_plugins(GamePlugins)
         .add_systems(Startup, setup_camera)
         .run();
 }
