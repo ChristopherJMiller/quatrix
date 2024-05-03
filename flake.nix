@@ -33,15 +33,7 @@
         # crane define src
         src = craneLib.cleanCargoSource ./.;
 
-        buildInputs = with pkgs; [
-          pkg-config
-          openssl
-          python310
-          udev alsa-lib vulkan-loader
-          xorg.libX11 xorg.libXcursor xorg.libXi xorg.libXrandr
-          libxkbcommon wayland
-          rustToolchain
-        ];
+        buildInputs = (import ./nix/inputs.nix pkgs).buildInputs ++ [ rustToolchain ];
 
         LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath buildInputs;
 

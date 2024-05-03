@@ -5,10 +5,7 @@ use bevy::{
 
 use crate::game::board::state::BoardTile;
 
-use self::{
-    rotate::RotateBoardPlugin,
-    state::{GameState, GameStatePlugin},
-};
+use self::{rotate::RotateBoardPlugin, state::GameStatePlugin};
 
 use super::settings::GameSettings;
 
@@ -23,7 +20,6 @@ fn setup_board(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     game_settings: Res<GameSettings>,
-    game_state: Res<GameState>,
 ) {
     const BOARD_DIM: f32 = 200.0;
 
