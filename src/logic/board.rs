@@ -4,17 +4,25 @@ use super::{error::GameError, insertion::InsertionDirection};
 
 pub struct GameBoard {
     board: DMatrix<u8>,
+    offset: i8,
+    display_board: DMatrix<u8>,
 }
 
 impl GameBoard {
     pub fn new(n: usize) -> Self {
         Self {
             board: DMatrix::zeros(n, n),
+            offset: 0,
+            display_board: DMatrix::zeros(n, n),
         }
     }
 
     pub fn board(&self) -> &DMatrix<u8> {
         &self.board
+    }
+
+    pub fn display_board(&self) -> &DMatrix<u8> {
+        &self.display_board
     }
 
     pub fn place(&mut self, slot: usize) -> Result<(), GameError> {
@@ -41,27 +49,61 @@ impl GameBoard {
             }
         }
 
+        self.update_display_board(0);
+
         Ok(())
     }
 
-    pub fn rotate_right(&mut self) {
-        let mut board = self.board.transpose();
+    fn rotate_board_right(mut board: DMatrix<u8>) -> DMatrix<u8> {
+        let mut board = board.transpose();
 
-        let width = self.board.ncols();
+        let width = board.ncols();
         let half_width = width / 2;
 
         (0..half_width).for_each(|i| board.swap_columns(i, width - i - 1));
 
-        self.board = board;
+        board
+    }
+
+    pub fn rotate_right(&mut self) {
+        self.board = Self::rotate_board_right(self.board.clone());
+        self.update_display_board(1);
+    }
+
+    fn rotate_board_left(mut board: DMatrix<u8>) -> DMatrix<u8> {
+        let width = board.ncols();
+        let half_width = width / 2;
+
+        (0..half_width).for_each(|i| board.swap_columns(i, width - i - 1));
+
+        board.transpose()
     }
 
     pub fn rotate_left(&mut self) {
-        let width = self.board.ncols();
-        let half_width = width / 2;
+        self.board = Self::rotate_board_left(self.board.clone());
+        self.update_display_board(-1);
+    }
 
-        (0..half_width).for_each(|i| self.board.swap_columns(i, width - i - 1));
+    fn update_display_board(&mut self, change: i8) {
+        self.offset += change;
 
-        self.board = self.board.transpose();
+        let mut new_board = self.board.clone();
+
+        let range = if self.offset > 0 {
+            0..self.offset
+        } else {
+            self.offset..0
+        };
+
+        for r in range.into_iter() {
+            if r > 0 {
+                new_board = Self::rotate_board_right(new_board);
+            } else {
+                new_board = Self::rotate_board_left(new_board);
+            }
+        }
+
+        self.display_board = new_board;
     }
 }
 

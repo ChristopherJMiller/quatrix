@@ -2,15 +2,16 @@ use bevy::prelude::*;
 
 use super::{
     super::controls::{RotateLeftPressed, RotateRightPressed},
+    state::GameState,
     Board,
 };
 
 #[derive(Component)]
 pub struct RotateBoard {
-    t: f32,
-    dt_mod: f32,
-    current_degrees: f32,
-    target_degrees: f32,
+    pub t: f32,
+    pub dt_mod: f32,
+    pub current_degrees: f32,
+    pub target_degrees: f32,
 }
 
 impl RotateBoard {
@@ -82,21 +83,35 @@ fn handle_rotate_events(
 fn rotate_board(
     mut commands: Commands,
     time: Res<Time>,
+    mut game_state: ResMut<GameState>,
     mut board: Query<(Entity, &mut Transform, &mut RotateBoard), With<Board>>,
+    mut drop_block: EventWriter<DropBlockEvent>,
 ) {
     if let Ok((ent, mut trans, mut rotate_board)) = board.get_single_mut() {
         if let Some(quat) = rotate_board.rotate(time.delta_seconds()) {
             trans.rotation = quat;
         } else {
+            trans.rotation =
+                Quat::from_axis_angle(Vec3::NEG_Z, rotate_board.target_degrees.to_radians());
             commands.entity(ent).remove::<RotateBoard>();
+            if rotate_board.target_degrees > rotate_board.current_degrees {
+                game_state.data_board.rotate_right();
+            } else {
+                game_state.data_board.rotate_left();
+            }
+            drop_block.send(DropBlockEvent::default());
         }
     }
 }
+
+#[derive(Event, Default)]
+pub struct DropBlockEvent;
 
 pub struct RotateBoardPlugin;
 
 impl Plugin for RotateBoardPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (handle_rotate_events, rotate_board).chain());
+        app.add_event::<DropBlockEvent>()
+            .add_systems(Update, (handle_rotate_events, rotate_board).chain());
     }
 }

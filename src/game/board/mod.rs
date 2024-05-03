@@ -9,8 +9,28 @@ use self::{rotate::RotateBoardPlugin, state::GameStatePlugin};
 
 use super::settings::GameSettings;
 
-mod rotate;
-mod state;
+pub mod rotate;
+pub mod state;
+
+pub const BOARD_DIM: f32 = 200.0;
+
+pub struct BoardCalculations {
+    pub border_buffer: f32,
+    pub square_dim: f32,
+    pub square_border: f32,
+}
+
+pub fn get_square_dim(game_settings: &GameSettings) -> BoardCalculations {
+    let border_buffer = BOARD_DIM * 0.1;
+    let square_dim = (BOARD_DIM - border_buffer) / game_settings.board_dim as f32;
+    let square_border = square_dim * 0.1;
+
+    BoardCalculations {
+        border_buffer,
+        square_dim,
+        square_border,
+    }
+}
 
 #[derive(Component)]
 pub struct Board;
@@ -21,8 +41,6 @@ fn setup_board(
     mut materials: ResMut<Assets<ColorMaterial>>,
     game_settings: Res<GameSettings>,
 ) {
-    const BOARD_DIM: f32 = 200.0;
-
     let mesh = meshes.add(Rectangle::new(BOARD_DIM, BOARD_DIM));
 
     let color = Color::WHITE;
@@ -38,10 +56,11 @@ fn setup_board(
         .id();
 
     // Calculate children, everything is center aligned in bevy
+    let board_calculation = get_square_dim(&game_settings);
 
-    let border_buffer = BOARD_DIM * 0.1;
-    let square_dim = (BOARD_DIM - border_buffer) / game_settings.board_dim as f32;
-    let square_border = square_dim * 0.1;
+    let border_buffer = board_calculation.border_buffer;
+    let square_dim = board_calculation.square_dim;
+    let square_border = board_calculation.square_border;
 
     let left_aligned = (BOARD_DIM / 2.0) + border_buffer - square_dim - (square_border / 2.0);
 
