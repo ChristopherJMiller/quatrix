@@ -1,5 +1,5 @@
 {
-  description = "Temple";
+  description = "Quatrix";
 
   inputs = {
     nixpkgs.url = "nixpkgs";
