@@ -28,6 +28,8 @@ pub struct GameState {
     pub next_drop: usize,
 
     pub rotation_state: f32,
+
+    pub placement_history: Vec<usize>,
 }
 
 impl GameState {
@@ -44,10 +46,12 @@ impl GameState {
             data_board: GameBoard::new(n),
             next_drop: 0,
             rotation_state: 0.0,
+            placement_history: Vec::new(),
         }
     }
 
     pub fn place(&mut self) -> Result<(), GameError> {
+        self.placement_history.push(self.next_drop);
         self.data_board.place(self.next_drop)
     }
 }

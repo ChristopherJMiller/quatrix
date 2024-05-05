@@ -1,11 +1,13 @@
 use bevy::app::{PluginGroup, PluginGroupBuilder};
 
 use self::{
-    board::BoardPlugin, controls::ControlsPlugin, settings::SettingsPlugin, spawn::SpawnPlugin,
+    board::BoardPlugin, controls::ControlsPlugin, debug::DebugPlugin, settings::SettingsPlugin,
+    spawn::SpawnPlugin,
 };
 
 mod board;
 mod controls;
+mod debug;
 mod settings;
 mod spawn;
 
@@ -20,5 +22,6 @@ impl PluginGroup for GamePlugins {
             .add(ControlsPlugin)
             .add(BoardPlugin)
             .add(SpawnPlugin)
+            .add(DebugPlugin)
     }
 }

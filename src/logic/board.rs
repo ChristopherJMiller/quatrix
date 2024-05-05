@@ -404,4 +404,25 @@ mod tests {
             ])
         );
     }
+
+    #[test]
+    pub fn verify_corner_case_3() {
+        let mut game_board = GameBoard::new(4);
+
+        [0, 6, 5, 8, 12, 15, 14, 6, 3, 14, 4, 6, 6, 11]
+            .into_iter()
+            .for_each(|place| {
+                println!("Placing {place}");
+                game_board.place(place).unwrap();
+                println!("Board {}", game_board.board);
+            });
+
+        println!("{}", game_board.board);
+
+        let result = game_board.place(11);
+
+        assert_eq!(result, Ok(()));
+
+        println!("{}", game_board.board);
+    }
 }
