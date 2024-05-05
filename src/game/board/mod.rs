@@ -69,22 +69,21 @@ fn setup_board(
         square_dim - square_border,
     )));
 
-    let color = Color::rgb(0.0, 0.0, 0.0);
+    let color = Color::BLACK;
 
     let mut children = Vec::new();
 
     for y in 0..game_settings.board_dim {
         for x in 0..game_settings.board_dim {
+            let sprite_x = ((x as f32 * square_dim) + square_border) - left_aligned;
+            let sprite_y = -(((y as f32 * square_dim) + square_border) - left_aligned);
+
             children.push(
                 commands
                     .spawn(MaterialMesh2dBundle {
                         mesh: mesh.clone(),
                         material: materials.add(color),
-                        transform: Transform::from_xyz(
-                            ((x as f32 * square_dim) + square_border) - left_aligned,
-                            ((y as f32 * square_dim) + square_border) - left_aligned,
-                            1.0,
-                        ),
+                        transform: Transform::from_xyz(sprite_x, sprite_y, 1.0),
                         ..default()
                     })
                     .insert(BoardTile::new(x, y))

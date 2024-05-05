@@ -56,8 +56,12 @@ fn update_board_children(
 ) {
     let board = game_state.data_board.display_board();
     children_query.iter_mut().for_each(|(tile, mut handle)| {
-        if let Some(tile) = board.column(tile.x.into()).get::<usize>(tile.y.into()) {
-            let color = if *tile > 0 { Color::NAVY } else { Color::BLACK };
+        if let Some(tile_value) = board.column(tile.x.into()).get::<usize>(tile.y.into()) {
+            let color = if *tile_value > 0 {
+                Color::NAVY
+            } else {
+                Color::BLACK
+            };
 
             *handle = materials.add(color);
         }
@@ -71,13 +75,16 @@ fn handle_block_drops(
 ) {
     for _ in drop_block.read() {
         if let Err(err) = state.place() {
-            panic!(
+            warn!(
                 "Error placing tile! {:?}. Good chance this should be a game over screen",
                 err
             );
         } else {
             state.update_next_drop(&settings);
         }
+
+        info!("New Board {}", state.data_board.board());
+        info!("Next Drop is {}", state.next_drop);
     }
 }
 
@@ -88,6 +95,6 @@ impl Plugin for GameStatePlugin {
         let default_settings = GameSettings::default();
 
         app.insert_resource(GameState::new(default_settings.board_dim as usize))
-            .add_systems(Update, (update_board_children, handle_block_drops));
+            .add_systems(PostUpdate, (update_board_children, handle_block_drops));
     }
 }

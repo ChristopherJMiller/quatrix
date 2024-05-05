@@ -40,15 +40,14 @@ fn build_spawners(
                 x
             };
 
+            let spawner_x = y as f32 * (((x as f32 * square_dim) + square_border) - left_aligned);
+            let spawner_y = BOARD_DIM * y as f32;
+
             commands
                 .spawn(MaterialMesh2dBundle {
                     mesh: mesh.clone(),
                     material: materials.add(color),
-                    transform: Transform::from_xyz(
-                        ((x as f32 * square_dim) + square_border) - left_aligned,
-                        BOARD_DIM * y as f32,
-                        1.0,
-                    ),
+                    transform: Transform::from_xyz(spawner_x, spawner_y, 1.0),
                     ..default()
                 })
                 .insert(SpawnTile(index as usize));
@@ -63,15 +62,14 @@ fn build_spawners(
                 y + settings.board_dim
             };
 
+            let spawner_x = BOARD_DIM * x as f32;
+            let spawner_y = -x as f32 * (((y as f32 * square_dim) + square_border) - left_aligned);
+
             commands
                 .spawn(MaterialMesh2dBundle {
                     mesh: mesh.clone(),
                     material: materials.add(color),
-                    transform: Transform::from_xyz(
-                        BOARD_DIM * x as f32,
-                        ((y as f32 * square_dim) + square_border) - left_aligned,
-                        1.0,
-                    ),
+                    transform: Transform::from_xyz(spawner_x, spawner_y, 1.0),
                     ..default()
                 })
                 .insert(SpawnTile(index as usize));

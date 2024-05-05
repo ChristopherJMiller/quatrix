@@ -70,18 +70,23 @@ impl InsertionDirection {
         };
 
         if let Some(one_found) = first_one_found {
-            let space_behind = if one_found > 1 {
-                slice.get(one_found - 1).map(|&x| x == 0).is_some_and(|x| x)
-            } else {
-                false
-            };
-            let space_ahead = slice.get(one_found + 1).map(|&x| x == 0).is_some_and(|x| x);
+            for i in one_found..slice.len() {
+                let space_available = slice.get(i).map(|&x| x == 0).is_some_and(|x| x);
 
-            if space_behind {
-                slice[one_found - 1] = 1;
-            } else if space_ahead {
-                slice[one_found + 1] = 1;
+                if space_available {
+                    slice[i] = 1;
+                    return Ok(());
+                }
             }
+
+            // Place before
+            if slice.get(one_found - 1).map(|&x| x == 0).is_some_and(|x| x) {
+                slice[one_found - 1] = 1;
+                return Ok(());
+            }
+
+            // Otherwise, error as it's full
+            return Err(GameError::SliceFull);
         } else {
             let default_placement = match self {
                 InsertionDirection::FromTop | InsertionDirection::FromLeft => slice.len() - 1,

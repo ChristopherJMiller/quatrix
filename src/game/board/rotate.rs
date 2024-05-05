@@ -26,8 +26,8 @@ impl RotateBoard {
         let target_degrees = current_degrees + target_degrees_delta;
 
         Self {
-            target_degrees,
-            current_degrees,
+            target_degrees: target_degrees,
+            current_degrees: current_degrees,
             dt_mod: 1.0 / time,
             t: 0.0,
         }
@@ -91,14 +91,18 @@ fn rotate_board(
         if let Some(quat) = rotate_board.rotate(time.delta_seconds()) {
             trans.rotation = quat;
         } else {
-            trans.rotation =
-                Quat::from_axis_angle(Vec3::NEG_Z, rotate_board.target_degrees.to_radians());
+            trans.rotation = Quat::from_rotation_z(-rotate_board.target_degrees.to_radians());
+
+            info!("{}", trans.rotation);
+
             commands.entity(ent).remove::<RotateBoard>();
+
             if rotate_board.target_degrees > rotate_board.current_degrees {
                 game_state.data_board.rotate_right();
             } else {
                 game_state.data_board.rotate_left();
             }
+
             drop_block.send(DropBlockEvent::default());
         }
     }

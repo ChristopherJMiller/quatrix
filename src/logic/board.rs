@@ -1,7 +1,9 @@
+use bevy::log::info;
 use nalgebra::{DMatrix, RowDVector};
 
 use super::{error::GameError, insertion::InsertionDirection};
 
+#[derive(Clone)]
 pub struct GameBoard {
     board: DMatrix<u8>,
     offset: i8,
@@ -55,7 +57,7 @@ impl GameBoard {
     }
 
     fn rotate_board_right(mut board: DMatrix<u8>) -> DMatrix<u8> {
-        let mut board = board.transpose();
+        board.transpose_mut();
 
         let width = board.ncols();
         let half_width = width / 2;
@@ -76,7 +78,9 @@ impl GameBoard {
 
         (0..half_width).for_each(|i| board.swap_columns(i, width - i - 1));
 
-        board.transpose()
+        board.transpose_mut();
+
+        board
     }
 
     pub fn rotate_left(&mut self) {
@@ -89,17 +93,19 @@ impl GameBoard {
 
         let mut new_board = self.board.clone();
 
-        let range = if self.offset > 0 {
-            0..self.offset
-        } else {
-            self.offset..0
-        };
-
-        for r in range.into_iter() {
-            if r > 0 {
-                new_board = Self::rotate_board_right(new_board);
+        if self.offset.abs() > 0 {
+            let range = if self.offset > 0 {
+                0..self.offset
             } else {
-                new_board = Self::rotate_board_left(new_board);
+                self.offset..0
+            };
+
+            for r in range.into_iter() {
+                if r >= 0 {
+                    new_board = Self::rotate_board_left(new_board);
+                } else {
+                    new_board = Self::rotate_board_right(new_board);
+                }
             }
         }
 
@@ -306,6 +312,94 @@ mod tests {
             &DMatrix::from_rows(&[
                 RowDVector::from_vec(vec![0, 0, 1]),
                 RowDVector::from_vec(vec![0, 0, 1]),
+                RowDVector::from_vec(vec![1, 0, 0]),
+            ])
+        );
+    }
+
+    #[test]
+    pub fn verify_display_board() {
+        let mut board = GameBoard::new(3);
+        board.place(0).unwrap();
+
+        assert_eq!(board.board(), board.display_board());
+
+        let upright_position = board.clone();
+
+        for i in (-10..20).into_iter() {
+            if i < 0 {
+                board.rotate_left();
+            } else {
+                board.rotate_right();
+            }
+
+            // upright position board should be the same for the board's display board
+            assert_eq!(upright_position.board(), board.display_board());
+        }
+    }
+
+    #[test]
+    pub fn verify_corner_case() {
+        let mut game_board = GameBoard::new(3);
+
+        game_board.place(3).unwrap();
+        game_board.place(3).unwrap();
+        game_board.place(4).unwrap();
+
+        assert_eq!(
+            game_board.board(),
+            &DMatrix::from_rows(&[
+                RowDVector::from_vec(vec![1, 1, 0]),
+                RowDVector::from_vec(vec![1, 0, 0]),
+                RowDVector::from_vec(vec![0, 0, 0]),
+            ])
+        );
+
+        game_board.place(0).unwrap();
+
+        assert_eq!(
+            game_board.board(),
+            &DMatrix::from_rows(&[
+                RowDVector::from_vec(vec![1, 1, 0]),
+                RowDVector::from_vec(vec![1, 0, 0]),
+                RowDVector::from_vec(vec![1, 0, 0]),
+            ])
+        );
+    }
+
+    #[test]
+    pub fn verify_corner_case_2() {
+        let mut game_board = GameBoard::new(3);
+
+        game_board.place(4).unwrap();
+
+        assert_eq!(
+            game_board.board(),
+            &DMatrix::from_rows(&[
+                RowDVector::from_vec(vec![0, 0, 0]),
+                RowDVector::from_vec(vec![1, 0, 0]),
+                RowDVector::from_vec(vec![0, 0, 0]),
+            ])
+        );
+
+        game_board.place(0).unwrap();
+
+        assert_eq!(
+            game_board.board(),
+            &DMatrix::from_rows(&[
+                RowDVector::from_vec(vec![0, 0, 0]),
+                RowDVector::from_vec(vec![1, 0, 0]),
+                RowDVector::from_vec(vec![1, 0, 0]),
+            ])
+        );
+
+        game_board.place(0).unwrap();
+
+        assert_eq!(
+            game_board.board(),
+            &DMatrix::from_rows(&[
+                RowDVector::from_vec(vec![1, 0, 0]),
+                RowDVector::from_vec(vec![1, 0, 0]),
                 RowDVector::from_vec(vec![1, 0, 0]),
             ])
         );
