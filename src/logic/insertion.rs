@@ -80,9 +80,11 @@ impl InsertionDirection {
             }
 
             // Place before
-            if slice.get(one_found - 1).map(|&x| x == 0).is_some_and(|x| x) {
-                slice[one_found - 1] = 1;
-                return Ok(());
+            if one_found > 0 {
+                if slice.get(one_found - 1).map(|&x| x == 0).is_some_and(|x| x) {
+                    slice[one_found - 1] = 1;
+                    return Ok(());
+                }
             }
 
             // Otherwise, error as it's full
