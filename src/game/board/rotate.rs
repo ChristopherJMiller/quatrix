@@ -33,12 +33,16 @@ impl RotateBoard {
         }
     }
 
-    pub fn rotate(&mut self, dt: f32) -> Option<Quat> {
+    pub fn rotate(&mut self, dt: f32) -> Option<f32> {
         let result = if self.t >= 1.0 {
             None
         } else {
-            let degrees = self.current_degrees.lerp(self.target_degrees, self.t);
-            Some(Quat::from_axis_angle(Vec3::NEG_Z, degrees.to_radians()))
+            let degrees = self
+                .current_degrees
+                .lerp(self.target_degrees, dt * self.dt_mod)
+                - self.current_degrees;
+
+            Some(-degrees.to_radians())
         };
 
         self.t += dt * self.dt_mod;
@@ -88,10 +92,19 @@ fn rotate_board(
     mut drop_block: EventWriter<DropBlockEvent>,
 ) {
     if let Ok((ent, mut trans, mut rotate_board)) = board.get_single_mut() {
-        if let Some(quat) = rotate_board.rotate(time.delta_seconds()) {
-            trans.rotation = quat;
+        if let Some(degrees) = rotate_board.rotate(time.delta_seconds()) {
+            trans.rotate_z(degrees);
         } else {
-            trans.rotation = Quat::from_rotation_z(-rotate_board.target_degrees.to_radians());
+            trans.rotation =
+                Quat::from_rotation_z(-(rotate_board.target_degrees % 360.0).to_radians());
+
+            if trans.rotation.z.abs() < f32::EPSILON {
+                trans.rotation.z = 0.0;
+            }
+
+            if trans.rotation.w.abs() < f32::EPSILON {
+                trans.rotation.w = 0.0;
+            }
 
             info!("{}", trans.rotation);
 
