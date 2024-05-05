@@ -16,18 +16,15 @@ pub struct RotateBoard {
 
 impl RotateBoard {
     pub fn new_from_current_angle(
-        current_quat: &Quat,
+        current_degrees: f32,
         target_degrees_delta: f32,
         time: f32,
     ) -> Self {
-        let (_, current_radians) = current_quat.to_axis_angle();
-        let current_degrees = current_radians.to_degrees();
-
         let target_degrees = current_degrees + target_degrees_delta;
 
         Self {
-            target_degrees: target_degrees,
-            current_degrees: current_degrees,
+            target_degrees,
+            current_degrees,
             dt_mod: 1.0 / time,
             t: 0.0,
         }
@@ -53,9 +50,10 @@ impl RotateBoard {
 
 fn handle_rotate_events(
     mut commands: Commands,
+    mut game_state: ResMut<GameState>,
     mut rotate_left: EventReader<RotateLeftPressed>,
     mut rotate_right: EventReader<RotateRightPressed>,
-    board: Query<(Entity, &Transform), (With<Board>, Without<RotateBoard>)>,
+    board: Query<Entity, (With<Board>, Without<RotateBoard>)>,
 ) {
     let left_received = rotate_left.read().next().is_some();
     rotate_left.clear();
@@ -63,7 +61,7 @@ fn handle_rotate_events(
     let right_received = rotate_right.read().next().is_some();
     rotate_right.clear();
 
-    if let Ok((ent, trans)) = board.get_single() {
+    if let Ok(ent) = board.get_single() {
         let angle = if left_received {
             Some(-90.0)
         } else if right_received {
@@ -76,10 +74,13 @@ fn handle_rotate_events(
             commands
                 .entity(ent)
                 .insert(RotateBoard::new_from_current_angle(
-                    &trans.rotation,
+                    game_state.rotation_state,
                     angle,
                     0.5,
                 ));
+
+            game_state.rotation_state += angle;
+            game_state.rotation_state = game_state.rotation_state % 360.0;
         }
     }
 }
@@ -95,18 +96,20 @@ fn rotate_board(
         if let Some(degrees) = rotate_board.rotate(time.delta_seconds()) {
             trans.rotate_z(degrees);
         } else {
-            trans.rotation =
-                Quat::from_rotation_z(-(rotate_board.target_degrees % 360.0).to_radians());
-
-            if trans.rotation.z.abs() < f32::EPSILON {
-                trans.rotation.z = 0.0;
+            let mut angle = (rotate_board.target_degrees % 360.0).round() as i32;
+            if angle < 0 {
+                angle += 360;
             }
 
-            if trans.rotation.w.abs() < f32::EPSILON {
-                trans.rotation.w = 0.0;
-            }
+            let quat = match angle.abs() {
+                0 => Quat::from_xyzw(0.0, 0.0, 0.0, -1.0),
+                90 => Quat::from_xyzw(0.0, 0.0, 2.0_f32.sqrt() / 2.0, -2.0_f32.sqrt() / 2.0),
+                180 => Quat::from_xyzw(0.0, 0.0, 1.0, 0.0),
+                270 => Quat::from_xyzw(0.0, 0.0, -2.0_f32.sqrt() / 2.0, -2.0_f32.sqrt() / 2.0),
+                x => panic!("Unsure how to rotate {x}"),
+            };
 
-            info!("{}", trans.rotation);
+            trans.rotation = quat;
 
             commands.entity(ent).remove::<RotateBoard>();
 

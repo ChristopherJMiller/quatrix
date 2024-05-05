@@ -26,6 +26,8 @@ pub struct GameState {
     pub data_board: GameBoard,
 
     pub next_drop: usize,
+
+    pub rotation_state: f32,
 }
 
 impl GameState {
@@ -41,6 +43,7 @@ impl GameState {
         Self {
             data_board: GameBoard::new(n),
             next_drop: 0,
+            rotation_state: 0.0,
         }
     }
 
