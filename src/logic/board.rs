@@ -1,4 +1,3 @@
-use bevy::log::info;
 use nalgebra::{DMatrix, RowDVector};
 
 use super::{error::GameError, insertion::InsertionDirection};
@@ -29,6 +28,7 @@ impl GameBoard {
 
     pub fn place(&mut self, slot: usize) -> Result<(), GameError> {
         let insertion_direction = InsertionDirection::for_board_insertion(&self.board, slot)?;
+        println!("Dropping into {slot} ({:?})", insertion_direction);
         let index = insertion_direction.get_side_index(&self.board, slot);
 
         match insertion_direction {
@@ -125,6 +125,8 @@ mod tests {
 
         // top place
         game_board.place(0).unwrap();
+
+        println!("{}", game_board.board);
 
         assert_eq!(
             game_board.board(),
@@ -343,7 +345,13 @@ mod tests {
         let mut game_board = GameBoard::new(3);
 
         game_board.place(3).unwrap();
+
+        println!("{}", game_board.display_board);
+
         game_board.place(3).unwrap();
+
+        println!("{}", game_board.display_board);
+
         game_board.place(4).unwrap();
 
         assert_eq!(
@@ -355,7 +363,11 @@ mod tests {
             ])
         );
 
+        println!("{}", game_board.display_board);
+
         game_board.place(0).unwrap();
+
+        println!("{}", game_board.display_board);
 
         assert_eq!(
             game_board.board(),
@@ -373,6 +385,8 @@ mod tests {
 
         game_board.place(4).unwrap();
 
+        println!("{}", game_board.board);
+
         assert_eq!(
             game_board.board(),
             &DMatrix::from_rows(&[
@@ -383,6 +397,8 @@ mod tests {
         );
 
         game_board.place(0).unwrap();
+
+        println!("{}", game_board.board);
 
         assert_eq!(
             game_board.board(),
@@ -409,20 +425,45 @@ mod tests {
     pub fn verify_corner_case_3() {
         let mut game_board = GameBoard::new(4);
 
-        [0, 6, 5, 8, 12, 15, 14, 6, 3, 14, 4, 6, 6, 11]
+        [0, 0, 0, 15, 15, 15, 11].into_iter().for_each(|place| {
+            println!("Placing {place}");
+            game_board.place(place).unwrap();
+            println!("Placed Board {}", game_board.board);
+        });
+    }
+
+    #[test]
+    pub fn verify_corner_case_4() {
+        let mut game_board = GameBoard::new(4);
+
+        [4, 4, 4, 3, 3, 3, 4].into_iter().for_each(|place| {
+            println!("Placing {place}");
+            game_board.place(place).unwrap();
+            println!("Placed Board {}", game_board.board);
+        });
+    }
+
+    #[test]
+    pub fn verify_corner_case_5() {
+        let mut game_board = GameBoard::new(4);
+
+        [0, 0, 0, 15, 15, 15, 15].into_iter().for_each(|place| {
+            println!("Placing {place}");
+            game_board.place(place).unwrap();
+            println!("Placed Board {}", game_board.board);
+        });
+    }
+
+    #[test]
+    pub fn verify_corner_case_6() {
+        let mut game_board = GameBoard::new(4);
+
+        [0, 15, 13, 0, 2, 2, 14, 2, 6]
             .into_iter()
             .for_each(|place| {
                 println!("Placing {place}");
                 game_board.place(place).unwrap();
-                println!("Board {}", game_board.board);
+                println!("Placed Board {}", game_board.board);
             });
-
-        println!("{}", game_board.board);
-
-        let result = game_board.place(11);
-
-        assert_eq!(result, Ok(()));
-
-        println!("{}", game_board.board);
     }
 }

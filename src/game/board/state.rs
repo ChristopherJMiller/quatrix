@@ -51,8 +51,10 @@ impl GameState {
     }
 
     pub fn place(&mut self) -> Result<(), GameError> {
+        self.data_board.place(self.next_drop)?;
         self.placement_history.push(self.next_drop);
-        self.data_board.place(self.next_drop)
+
+        Ok(())
     }
 }
 
@@ -90,7 +92,7 @@ fn handle_block_drops(
             state.update_next_drop(&settings);
         }
 
-        info!("New Board {}", state.data_board.board());
+        info!("New Board {}", state.data_board.display_board());
         info!("Next Drop is {}", state.next_drop);
     }
 }
