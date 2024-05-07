@@ -26,6 +26,7 @@ pub struct GameState {
     pub data_board: GameBoard,
 
     pub next_drop: usize,
+    pub offset: i8,
 
     pub rotation_state: f32,
 
@@ -37,6 +38,7 @@ impl GameState {
         let mut rng = rand::thread_rng();
 
         self.next_drop = rng.gen_range(0..settings.board_dim as usize * 4);
+        self.offset = 0;
 
         self.next_drop
     }
@@ -45,14 +47,29 @@ impl GameState {
         Self {
             data_board: GameBoard::new(n).with_rows_clearing(),
             next_drop: 0,
+            offset: 0,
             rotation_state: 0.0,
             placement_history: Vec::new(),
         }
     }
 
+    pub fn drop(&self) -> usize {
+        let max_index = (self.data_board.board().ncols() * 4).saturating_sub(1);
+        if self.next_drop == 0 && self.offset == -1 {
+            max_index
+        } else {
+            if self.next_drop == max_index && self.offset == 1 {
+                0
+            } else {
+                self.next_drop.saturating_add_signed(self.offset.into())
+            }
+        }
+    }
+
     pub fn place(&mut self) -> Result<(), GameError> {
-        self.data_board.place(self.next_drop)?;
-        self.placement_history.push(self.next_drop);
+        let drop = self.drop();
+        self.data_board.place(drop)?;
+        self.placement_history.push(drop);
 
         Ok(())
     }
@@ -105,5 +122,37 @@ impl Plugin for GameStatePlugin {
 
         app.insert_resource(GameState::new(default_settings.board_dim as usize))
             .add_systems(PostUpdate, (update_board_children, handle_block_drops));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::GameState;
+
+    #[test]
+    fn verify_drop() {
+        let mut state = GameState::new(4);
+
+        // Min Wrapping
+        state.offset = -1;
+        assert_eq!(state.drop(), 15);
+
+        // Max Wrapping
+        state.next_drop = 15;
+        state.offset = 1;
+        assert_eq!(state.drop(), 0);
+
+        [-1, 0, 1].into_iter().for_each(|offset| {
+            state.offset = offset;
+
+            (0..15).into_iter().for_each(|index| {
+                if (index == 0 && offset == -1) || (index == 15 && offset == 1) {
+                    // Skip Edge
+                } else {
+                    state.next_drop = index;
+                    assert_eq!(state.drop(), (index as i32 + offset as i32) as usize);
+                }
+            });
+        });
     }
 }

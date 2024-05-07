@@ -25,7 +25,6 @@ impl GameBoard {
         self
     }
 
-    #[cfg(test)]
     pub fn board(&self) -> &DMatrix<u8> {
         &self.board
     }
@@ -214,6 +213,8 @@ impl GameBoard {
 mod tests {
     use nalgebra::{DMatrix, RowDVector};
 
+    use crate::logic::error::GameError;
+
     use super::GameBoard;
 
     #[test]
@@ -301,25 +302,6 @@ mod tests {
                 RowDVector::from_vec(vec![0, 0, 0]),
                 RowDVector::from_vec(vec![1, 1, 0]),
                 RowDVector::from_vec(vec![1, 0, 0]),
-            ])
-        );
-    }
-
-    #[test]
-    pub fn verify_place_stacking_2() {
-        let mut game_board = GameBoard::new(3);
-
-        // top place
-        game_board.place(0).unwrap();
-        game_board.place(9).unwrap();
-        game_board.place(8).unwrap();
-
-        assert_eq!(
-            game_board.board(),
-            &DMatrix::from_rows(&[
-                RowDVector::from_vec(vec![0, 0, 0]),
-                RowDVector::from_vec(vec![1, 0, 0]),
-                RowDVector::from_vec(vec![1, 1, 0]),
             ])
         );
     }
@@ -439,98 +421,6 @@ mod tests {
 
     #[test]
     pub fn verify_corner_case() {
-        let mut game_board = GameBoard::new(3);
-
-        game_board.place(3).unwrap();
-
-        println!("{}", game_board.display_board);
-
-        game_board.place(3).unwrap();
-
-        println!("{}", game_board.display_board);
-
-        game_board.place(4).unwrap();
-
-        assert_eq!(
-            game_board.board(),
-            &DMatrix::from_rows(&[
-                RowDVector::from_vec(vec![1, 1, 0]),
-                RowDVector::from_vec(vec![1, 0, 0]),
-                RowDVector::from_vec(vec![0, 0, 0]),
-            ])
-        );
-
-        println!("{}", game_board.display_board);
-
-        game_board.place(0).unwrap();
-
-        println!("{}", game_board.display_board);
-
-        assert_eq!(
-            game_board.board(),
-            &DMatrix::from_rows(&[
-                RowDVector::from_vec(vec![1, 1, 0]),
-                RowDVector::from_vec(vec![1, 0, 0]),
-                RowDVector::from_vec(vec![1, 0, 0]),
-            ])
-        );
-    }
-
-    #[test]
-    pub fn verify_corner_case_2() {
-        let mut game_board = GameBoard::new(3);
-
-        game_board.place(4).unwrap();
-
-        println!("{}", game_board.board);
-
-        assert_eq!(
-            game_board.board(),
-            &DMatrix::from_rows(&[
-                RowDVector::from_vec(vec![0, 0, 0]),
-                RowDVector::from_vec(vec![1, 0, 0]),
-                RowDVector::from_vec(vec![0, 0, 0]),
-            ])
-        );
-
-        game_board.place(0).unwrap();
-
-        println!("{}", game_board.board);
-
-        assert_eq!(
-            game_board.board(),
-            &DMatrix::from_rows(&[
-                RowDVector::from_vec(vec![0, 0, 0]),
-                RowDVector::from_vec(vec![1, 0, 0]),
-                RowDVector::from_vec(vec![1, 0, 0]),
-            ])
-        );
-
-        game_board.place(0).unwrap();
-
-        assert_eq!(
-            game_board.board(),
-            &DMatrix::from_rows(&[
-                RowDVector::from_vec(vec![1, 0, 0]),
-                RowDVector::from_vec(vec![1, 0, 0]),
-                RowDVector::from_vec(vec![1, 0, 0]),
-            ])
-        );
-    }
-
-    #[test]
-    pub fn verify_corner_case_3() {
-        let mut game_board = GameBoard::new(4);
-
-        [0, 0, 0, 15, 15, 15, 11].into_iter().for_each(|place| {
-            println!("Placing {place}");
-            game_board.place(place).unwrap();
-            println!("Placed Board {}", game_board.board);
-        });
-    }
-
-    #[test]
-    pub fn verify_corner_case_4() {
         let mut game_board = GameBoard::new(4);
 
         [4, 4, 4, 3, 3, 3, 4].into_iter().for_each(|place| {
@@ -541,7 +431,7 @@ mod tests {
     }
 
     #[test]
-    pub fn verify_corner_case_5() {
+    pub fn verify_corner_case_2() {
         let mut game_board = GameBoard::new(4);
 
         [0, 0, 0, 15, 15, 15, 15].into_iter().for_each(|place| {
@@ -549,19 +439,6 @@ mod tests {
             game_board.place(place).unwrap();
             println!("Placed Board {}", game_board.board);
         });
-    }
-
-    #[test]
-    pub fn verify_corner_case_6() {
-        let mut game_board = GameBoard::new(4);
-
-        [0, 15, 13, 0, 2, 2, 14, 2, 6]
-            .into_iter()
-            .for_each(|place| {
-                println!("Placing {place}");
-                game_board.place(place).unwrap();
-                println!("Placed Board {}", game_board.board);
-            });
     }
 
     #[test]
@@ -593,5 +470,24 @@ mod tests {
                 RowDVector::from_vec(vec![0, 0, 0]),
             ])
         );
+    }
+
+    #[test]
+    pub fn verify_stacking() {
+        let mut game_board = GameBoard::new(3);
+
+        game_board.place(10).unwrap();
+        game_board.place(6).unwrap();
+
+        assert_eq!(
+            game_board.board(),
+            &DMatrix::from_rows(&[
+                RowDVector::from_vec(vec![0, 0, 0]),
+                RowDVector::from_vec(vec![0, 0, 1]),
+                RowDVector::from_vec(vec![0, 0, 1]),
+            ])
+        );
+
+        assert_eq!(game_board.place(6), Err(GameError::NoSpace));
     }
 }

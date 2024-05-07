@@ -1,5 +1,10 @@
 use bevy::prelude::*;
 
+use crate::{
+    game::controls::{MinusOffsetPressed, PlusOffsetPressed},
+    logic::insertion::InsertionDirection,
+};
+
 use super::{
     super::controls::{RotateLeftPressed, RotateRightPressed},
     state::GameState,
@@ -124,6 +129,71 @@ fn rotate_board(
     }
 }
 
+fn offset(
+    mut state: ResMut<GameState>,
+    mut plus_offset: EventReader<PlusOffsetPressed>,
+    mut minus_offset: EventReader<MinusOffsetPressed>,
+) {
+    let direction =
+        InsertionDirection::for_board_insertion(state.data_board.board(), state.next_drop).ok();
+
+    let plus_received = plus_offset.read().next().is_some();
+    plus_offset.clear();
+
+    let minus_received = minus_offset.read().next().is_some();
+    minus_offset.clear();
+
+    let offset = if plus_received {
+        1
+    } else if minus_received {
+        -1
+    } else {
+        0
+    };
+
+    let oriented_offset = if let Some(direction) = direction {
+        let index = direction.get_side_index(state.data_board.board(), state.next_drop);
+        let half_width = state.data_board.board().ncols() / 2;
+        let half_height = state.data_board.board().nrows() / 2;
+
+        match direction {
+            InsertionDirection::FromLeft => {
+                if half_height <= index {
+                    offset
+                } else {
+                    -offset
+                }
+            }
+            InsertionDirection::FromTop => {
+                if half_width <= index {
+                    -offset
+                } else {
+                    offset
+                }
+            }
+            InsertionDirection::FromRight => {
+                if half_height <= index {
+                    offset
+                } else {
+                    -offset
+                }
+            }
+            InsertionDirection::FromBottom => {
+                if half_width <= index {
+                    -offset
+                } else {
+                    offset
+                }
+            }
+        }
+    } else {
+        offset
+    };
+
+    state.offset += oriented_offset;
+    state.offset = state.offset.clamp(-1, 1);
+}
+
 #[derive(Event, Default)]
 pub struct DropBlockEvent;
 
@@ -131,7 +201,9 @@ pub struct RotateBoardPlugin;
 
 impl Plugin for RotateBoardPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<DropBlockEvent>()
-            .add_systems(Update, (handle_rotate_events, rotate_board).chain());
+        app.add_event::<DropBlockEvent>().add_systems(
+            Update,
+            (offset, (handle_rotate_events, rotate_board).chain()),
+        );
     }
 }

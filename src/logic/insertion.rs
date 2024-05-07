@@ -62,15 +62,6 @@ impl InsertionDirection {
         let first_one_found = slice.iter().position(|&x| x == 1);
 
         if let Some(one_found) = first_one_found {
-            for i in one_found..slice.len() {
-                let space_available = slice.get(i).map(|&x| x == 0).is_some_and(|x| x);
-
-                if space_available {
-                    slice[i] = 1;
-                    return Ok(());
-                }
-            }
-
             // Place before
             if one_found > 0 {
                 if slice.get(one_found - 1).map(|&x| x == 0).is_some_and(|x| x) {
@@ -79,8 +70,8 @@ impl InsertionDirection {
                 }
             }
 
-            // Otherwise, error as it's full
-            return Err(GameError::SliceFull);
+            // Otherwise, error as there's no space
+            return Err(GameError::NoSpace);
         } else {
             slice[slice.len() - 1] = 1;
         }

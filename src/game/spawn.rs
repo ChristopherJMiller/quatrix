@@ -83,7 +83,7 @@ fn update_board_spawner(
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     children_query.iter_mut().for_each(|(tile, mut handle)| {
-        let color = if game_state.next_drop == tile.0 {
+        let color = if game_state.drop() == tile.0 {
             Color::NAVY
         } else {
             Color::WHITE
