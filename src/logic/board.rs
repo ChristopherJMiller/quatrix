@@ -1,4 +1,4 @@
-use nalgebra::{DMatrix, RowDVector, Vector};
+use nalgebra::{DMatrix, RowDVector};
 
 use super::{error::GameError, insertion::InsertionDirection};
 
@@ -18,6 +18,7 @@ impl GameBoard {
         }
     }
 
+    #[cfg(test)]
     pub fn board(&self) -> &DMatrix<u8> {
         &self.board
     }
