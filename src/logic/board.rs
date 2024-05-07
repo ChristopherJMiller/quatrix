@@ -1,4 +1,4 @@
-use nalgebra::{DMatrix, RowDVector};
+use nalgebra::{DMatrix, RowDVector, Vector};
 
 use super::{error::GameError, insertion::InsertionDirection};
 
@@ -32,13 +32,13 @@ impl GameBoard {
         let index = insertion_direction.get_side_index(&self.board, slot);
 
         match insertion_direction {
-            InsertionDirection::FromTop | InsertionDirection::FromBottom => {
+            InsertionDirection::FromTop => {
                 let mut column = self.board.column_mut(index);
                 let slice = column.as_mut_slice();
 
                 insertion_direction.place(slice)?;
             }
-            InsertionDirection::FromRight | InsertionDirection::FromLeft => {
+            InsertionDirection::FromLeft => {
                 let row = self.board.row(index);
                 let mut data = row.iter().map(|&x| x).collect::<Vec<_>>();
 
@@ -48,6 +48,27 @@ impl GameBoard {
                     index,
                     &RowDVector::from_row_iterator(data.len(), data.into_iter()),
                 );
+            }
+            InsertionDirection::FromRight => {
+                let row = self.board.row(index);
+                let mut data = row.iter().rev().map(|&x| x).collect::<Vec<_>>();
+
+                insertion_direction.place(&mut data)?;
+
+                self.board.set_row(
+                    index,
+                    &RowDVector::from_row_iterator(data.len(), data.into_iter().rev()),
+                );
+            }
+            InsertionDirection::FromBottom => {
+                let column = self.board.column_mut(index);
+                let mut data = column.iter().rev().map(|&x| x).collect::<Vec<_>>();
+
+                insertion_direction.place(&mut data)?;
+
+                data.reverse();
+
+                self.board.set_column(index, &data.into())
             }
         }
 
