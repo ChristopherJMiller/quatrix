@@ -43,7 +43,7 @@ impl GameState {
 
     pub fn new(n: usize) -> Self {
         Self {
-            data_board: GameBoard::new(n),
+            data_board: GameBoard::new(n).with_rows_clearing(),
             next_drop: 0,
             rotation_state: 0.0,
             placement_history: Vec::new(),

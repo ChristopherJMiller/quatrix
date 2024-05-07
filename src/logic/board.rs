@@ -7,6 +7,7 @@ pub struct GameBoard {
     board: DMatrix<u8>,
     offset: i8,
     display_board: DMatrix<u8>,
+    rows_clearing: bool,
 }
 
 impl GameBoard {
@@ -15,7 +16,13 @@ impl GameBoard {
             board: DMatrix::zeros(n, n),
             offset: 0,
             display_board: DMatrix::zeros(n, n),
+            rows_clearing: false,
         }
+    }
+
+    pub fn with_rows_clearing(mut self) -> Self {
+        self.rows_clearing = true;
+        self
     }
 
     #[cfg(test)]
@@ -73,9 +80,77 @@ impl GameBoard {
             }
         }
 
+        if self.rows_clearing {
+            self.check_full_rows(insertion_direction, index);
+        }
+
         self.update_display_board(0);
 
         Ok(())
+    }
+
+    fn check_row(&self, insertion_direction: InsertionDirection, index: usize) -> bool {
+        match insertion_direction {
+            InsertionDirection::FromTop | InsertionDirection::FromBottom => {
+                let data = self.board.column(index);
+                data.into_iter().all(|&x| x == 1)
+            }
+            InsertionDirection::FromRight | InsertionDirection::FromLeft => {
+                let data = self.board.row(index);
+                data.into_iter().all(|&x| x == 1)
+            }
+        }
+    }
+
+    fn check_full_rows(&mut self, insertion_direction: InsertionDirection, index: usize) {
+        let mut rows = Vec::new();
+        let mut cols = Vec::new();
+
+        match insertion_direction {
+            InsertionDirection::FromTop | InsertionDirection::FromBottom => {
+                let data = self.board.column(index);
+                let slice_full = data.into_iter().all(|&x| x == 1);
+
+                if slice_full {
+                    cols.push(index);
+                }
+
+                (0..self.board.nrows())
+                    .filter(|&index| self.check_row(InsertionDirection::FromLeft, index))
+                    .for_each(|index| {
+                        rows.push(index);
+                    });
+            }
+            InsertionDirection::FromRight | InsertionDirection::FromLeft => {
+                let data = self.board.row(index);
+                let slice_full = data.into_iter().all(|&x| x == 1);
+
+                if slice_full {
+                    rows.push(index);
+                }
+
+                (0..self.board.ncols())
+                    .filter(|&index| self.check_row(InsertionDirection::FromTop, index))
+                    .for_each(|index| {
+                        cols.push(index);
+                    });
+            }
+        }
+
+        for index in rows {
+            self.board.set_row(
+                index,
+                &RowDVector::from_row_iterator(
+                    self.board.nrows(),
+                    (0..self.board.nrows()).map(|_| 0),
+                ),
+            );
+        }
+
+        for index in cols {
+            self.board
+                .set_column(index, &vec![0_u8; self.board.ncols()].into());
+        }
     }
 
     fn rotate_board_right(mut board: DMatrix<u8>) -> DMatrix<u8> {
@@ -487,5 +562,36 @@ mod tests {
                 game_board.place(place).unwrap();
                 println!("Placed Board {}", game_board.board);
             });
+    }
+
+    #[test]
+    pub fn verify_board_clearing() {
+        let mut game_board = GameBoard::new(3).with_rows_clearing();
+
+        game_board.place(0).unwrap();
+        game_board.place(0).unwrap();
+
+        game_board.place(11).unwrap();
+        game_board.place(11).unwrap();
+
+        assert_eq!(
+            game_board.board(),
+            &DMatrix::from_rows(&[
+                RowDVector::from_vec(vec![0, 1, 1]),
+                RowDVector::from_vec(vec![1, 0, 0]),
+                RowDVector::from_vec(vec![1, 0, 0]),
+            ])
+        );
+
+        game_board.place(0).unwrap();
+
+        assert_eq!(
+            game_board.board(),
+            &DMatrix::from_rows(&[
+                RowDVector::from_vec(vec![0, 0, 0]),
+                RowDVector::from_vec(vec![0, 0, 0]),
+                RowDVector::from_vec(vec![0, 0, 0]),
+            ])
+        );
     }
 }
