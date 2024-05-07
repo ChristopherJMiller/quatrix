@@ -151,40 +151,14 @@ fn offset(
         0
     };
 
-    let oriented_offset = if let Some(direction) = direction {
-        let index = direction.get_side_index(state.data_board.board(), state.next_drop);
-        let half_width = state.data_board.board().ncols() / 2;
-        let half_height = state.data_board.board().nrows() / 2;
+    if offset == 0 {
+        return;
+    }
 
+    let oriented_offset = if let Some(direction) = direction {
         match direction {
-            InsertionDirection::FromLeft => {
-                if half_height <= index {
-                    offset
-                } else {
-                    -offset
-                }
-            }
-            InsertionDirection::FromTop => {
-                if half_width <= index {
-                    -offset
-                } else {
-                    offset
-                }
-            }
-            InsertionDirection::FromRight => {
-                if half_height <= index {
-                    offset
-                } else {
-                    -offset
-                }
-            }
-            InsertionDirection::FromBottom => {
-                if half_width <= index {
-                    -offset
-                } else {
-                    offset
-                }
-            }
+            InsertionDirection::FromLeft | InsertionDirection::FromTop => offset,
+            InsertionDirection::FromRight | InsertionDirection::FromBottom => -offset,
         }
     } else {
         offset
