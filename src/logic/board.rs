@@ -8,6 +8,8 @@ pub struct GameBoard {
     offset: i8,
     display_board: DMatrix<u8>,
     rows_clearing: bool,
+
+    score: usize,
 }
 
 impl GameBoard {
@@ -17,6 +19,7 @@ impl GameBoard {
             offset: 0,
             display_board: DMatrix::zeros(n, n),
             rows_clearing: false,
+            score: 0,
         }
     }
 
@@ -79,6 +82,8 @@ impl GameBoard {
             }
         }
 
+        self.score += 1;
+
         if self.rows_clearing {
             self.check_full_rows(insertion_direction, index);
         }
@@ -135,6 +140,14 @@ impl GameBoard {
                     });
             }
         }
+
+        let dim = self.board.ncols();
+        let score_delta = (0..(rows.len() + cols.len()))
+            .enumerate()
+            .map(|(i, _)| (i + 1) * dim)
+            .fold(0, usize::saturating_add);
+
+        self.score = self.score.saturating_add(score_delta);
 
         for index in rows {
             self.board.set_row(
@@ -489,5 +502,40 @@ mod tests {
         );
 
         assert_eq!(game_board.place(6), Err(GameError::NoSpace));
+    }
+
+    #[test]
+    pub fn verify_scoring() {
+        let mut game_board = GameBoard::new(3).with_rows_clearing();
+
+        game_board.place(0).unwrap();
+        assert_eq!(game_board.score, 1);
+
+        game_board.place(0).unwrap();
+        game_board.place(0).unwrap();
+
+        // 1 + 1 + clearing(3)
+        assert_eq!(game_board.score, 6);
+    }
+
+    #[test]
+    pub fn verify_scoring_2() {
+        let mut game_board = GameBoard::new(3).with_rows_clearing();
+
+        game_board.place(0).unwrap();
+        game_board.place(0).unwrap();
+        // 2 points placed
+
+        game_board.place(11).unwrap();
+        game_board.place(11).unwrap();
+        // 2 points placed
+
+        game_board.place(11).unwrap();
+        // 1 point placed
+
+        // 2 clears at once = 3 + 2 * 3 = 9
+        // 2 + 2 + 1 + 9 = 14
+
+        assert_eq!(game_board.score, 14);
     }
 }
