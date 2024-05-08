@@ -2,7 +2,7 @@ use nalgebra::{DMatrix, RowDVector};
 
 use super::{error::GameError, insertion::InsertionDirection};
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct GameBoard {
     board: DMatrix<u8>,
     offset: i8,
@@ -34,6 +34,10 @@ impl GameBoard {
 
     pub fn display_board(&self) -> &DMatrix<u8> {
         &self.display_board
+    }
+
+    pub fn score(&self) -> usize {
+        self.score
     }
 
     pub fn place(&mut self, slot: usize) -> Result<(), GameError> {

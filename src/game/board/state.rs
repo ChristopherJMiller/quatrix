@@ -20,17 +20,28 @@ impl BoardTile {
     }
 }
 
-#[derive(Resource)]
+#[derive(Debug, PartialEq)]
+pub enum GameMode {
+    Playing,
+    GameOver,
+}
+
+#[derive(Debug, Resource)]
 pub struct GameState {
     /// The current state of the game board
     pub data_board: GameBoard,
-
+    /// Next drop placement
     pub next_drop: usize,
+    /// Offset from next drop placement
     pub offset: i8,
-
+    /// 0 - 360 degrees rotation state
     pub rotation_state: f32,
-
+    /// Placement History
     pub placement_history: Vec<usize>,
+    /// Can users input?
+    pub enable_input: bool,
+    /// Current mode of play
+    pub mode: GameMode,
 }
 
 impl GameState {
@@ -50,6 +61,8 @@ impl GameState {
             offset: 0,
             rotation_state: 0.0,
             placement_history: Vec::new(),
+            enable_input: true,
+            mode: GameMode::Playing,
         }
     }
 
@@ -68,6 +81,7 @@ impl GameState {
 
     pub fn place(&mut self) -> Result<(), GameError> {
         let drop = self.drop();
+
         self.data_board.place(drop)?;
         self.placement_history.push(drop);
 
@@ -101,10 +115,18 @@ fn handle_block_drops(
 ) {
     for _ in drop_block.read() {
         if let Err(err) = state.place() {
-            warn!(
-                "Error placing tile! {:?}. Good chance this should be a game over screen",
-                err
-            );
+            match err {
+                GameError::InvalidPlacementLocation(placement) => {
+                    panic!(
+                        "Reached invalid placement: {placement}. State: {:#?}",
+                        state
+                    );
+                }
+                GameError::NoSpace => {
+                    state.mode = GameMode::GameOver;
+                    state.enable_input = false;
+                }
+            }
         } else {
             state.update_next_drop(&settings);
         }

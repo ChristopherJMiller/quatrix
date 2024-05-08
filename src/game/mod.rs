@@ -2,7 +2,7 @@ use bevy::app::{PluginGroup, PluginGroupBuilder};
 
 use self::{
     board::BoardPlugin, controls::ControlsPlugin, debug::DebugPlugin, settings::SettingsPlugin,
-    spawn::SpawnPlugin,
+    spawn::SpawnPlugin, ui::UiPlugin,
 };
 
 mod board;
@@ -10,6 +10,7 @@ mod controls;
 mod debug;
 mod settings;
 mod spawn;
+mod ui;
 
 pub struct GamePlugins;
 
@@ -23,5 +24,6 @@ impl PluginGroup for GamePlugins {
             .add(BoardPlugin)
             .add(SpawnPlugin)
             .add(DebugPlugin)
+            .add(UiPlugin)
     }
 }

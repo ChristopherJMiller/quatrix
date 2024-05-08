@@ -66,6 +66,11 @@ fn handle_rotate_events(
     let right_received = rotate_right.read().next().is_some();
     rotate_right.clear();
 
+    // Can be disabled
+    if !game_state.enable_input {
+        return;
+    }
+
     if let Ok(ent) = board.get_single() {
         let angle = if left_received {
             Some(-90.0)
@@ -142,6 +147,11 @@ fn offset(
 
     let minus_received = minus_offset.read().next().is_some();
     minus_offset.clear();
+
+    // Can be disabled
+    if !state.enable_input {
+        return;
+    }
 
     let offset = if plus_received {
         1

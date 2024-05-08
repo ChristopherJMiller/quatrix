@@ -13,7 +13,7 @@ fn main() {
             primary_window: Some(Window {
                 title: "Quatrix".into(),
                 name: Some("quatrix.app".into()),
-                resolution: (512., 512.).into(),
+                resolution: (1024., 768.).into(),
                 present_mode: PresentMode::AutoVsync,
                 prevent_default_event_handling: false,
                 window_theme: Some(WindowTheme::Dark),
