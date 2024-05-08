@@ -35,6 +35,9 @@ jobs:
       env:
         VERSION: ${{ steps.get_version.outputs.VERSION }}
       run: ./install_windows_client.sh
+    - run: where libstdc++-6.dll
+    - run: where libgcc_s_seh-1.dll
+    - run: where libwinpthread-1.dll
     - name: Publish to Itch.io
       uses: KikimoraGames/itch-publish@v0.0.3
       with:
