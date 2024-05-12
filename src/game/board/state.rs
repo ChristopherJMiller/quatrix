@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::{
-    game::settings::GameSettings,
+    game::{controls::RestartPressed, settings::GameSettings},
     logic::{board::GameBoard, error::GameError},
 };
 
@@ -136,6 +136,18 @@ fn handle_block_drops(
     }
 }
 
+fn handle_restart(
+    mut game_state: ResMut<GameState>,
+    mut restart_pressed: EventReader<RestartPressed>,
+) {
+    let pressed = restart_pressed.read().next().is_some();
+    restart_pressed.clear();
+
+    if pressed && game_state.mode == GameMode::GameOver {
+        *game_state = GameState::new(game_state.data_board.width());
+    }
+}
+
 pub struct GameStatePlugin;
 
 impl Plugin for GameStatePlugin {
@@ -143,6 +155,7 @@ impl Plugin for GameStatePlugin {
         let default_settings = GameSettings::default();
 
         app.insert_resource(GameState::new(default_settings.board_dim as usize))
+            .add_systems(Update, handle_restart)
             .add_systems(PostUpdate, (update_board_children, handle_block_drops));
     }
 }

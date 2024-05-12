@@ -16,7 +16,7 @@ fn display_scoring(state: Res<GameState>, mut text: Query<&mut Text, With<ScoreT
 fn display_game_over(state: Res<GameState>, mut text: Query<&mut Text, With<GameOverText>>) {
     let mut text = text.single_mut();
     text.sections[0].value = if state.mode == GameMode::GameOver {
-        String::from("Game Over")
+        String::from("Game Over, Press R to Restart")
     } else {
         String::new()
     };

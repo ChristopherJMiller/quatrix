@@ -31,6 +31,7 @@
         # crane define src
         src = craneLib.cleanCargoSource ./.;
 
+        runtimeInputs = (import ./nix/inputs.nix pkgs).runtimeInputs;
         buildInputs = (import ./nix/inputs.nix pkgs).buildInputs ++ [ rustToolchain ];
 
         LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath buildInputs;
@@ -56,6 +57,7 @@
       packages = {
         inherit LD_LIBRARY_PATH;
         inherit bin;
+        inherit runtimeInputs;
         default = bin;
       };
     }

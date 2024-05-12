@@ -28,6 +28,10 @@ impl GameBoard {
         self
     }
 
+    pub fn width(&self) -> usize {
+        self.board.ncols()
+    }
+
     pub fn board(&self) -> &DMatrix<u8> {
         &self.board
     }

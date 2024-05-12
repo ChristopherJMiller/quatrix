@@ -15,6 +15,9 @@ pub struct RotateRightPressed;
 #[derive(Event, Default)]
 pub struct PrintHistoryPressed;
 
+#[derive(Event, Default)]
+pub struct RestartPressed;
+
 fn handle_input(
     mut keyboard_input_events: EventReader<KeyboardInput>,
     mut plus_offset: EventWriter<PlusOffsetPressed>,
@@ -22,6 +25,7 @@ fn handle_input(
     mut rotate_left: EventWriter<RotateLeftPressed>,
     mut rotate_right: EventWriter<RotateRightPressed>,
     mut print_history: EventWriter<PrintHistoryPressed>,
+    mut restart: EventWriter<RestartPressed>,
 ) {
     for event in keyboard_input_events.read() {
         if !event.state.is_pressed() {
@@ -44,6 +48,9 @@ fn handle_input(
             KeyCode::Digit0 => {
                 print_history.send_default();
             }
+            KeyCode::KeyR => {
+                restart.send_default();
+            }
             _ => {}
         }
     }
@@ -58,6 +65,7 @@ impl Plugin for ControlsPlugin {
             .add_event::<RotateLeftPressed>()
             .add_event::<RotateRightPressed>()
             .add_event::<PrintHistoryPressed>()
+            .add_event::<RestartPressed>()
             .add_systems(PreUpdate, handle_input);
     }
 }
