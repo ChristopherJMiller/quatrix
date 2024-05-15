@@ -47,7 +47,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             "Game Over",
             TextStyle {
                 font: asset_server.load("fonts/quit13.ttf"),
-                font_size: 72.0,
+                font_size: 64.0,
                 color: Color::RED,
                 ..default()
             },

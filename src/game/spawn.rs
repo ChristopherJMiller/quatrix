@@ -1,36 +1,17 @@
-use bevy::{
-    prelude::*,
-    sprite::{MaterialMesh2dBundle, Mesh2dHandle},
-};
+use bevy::prelude::*;
 
 use super::{
-    board::{get_square_dim, state::GameState, BOARD_DIM},
+    board::{get_square_dim, sprite::BoardSprites, state::GameState, BOARD_DIM, SPRITE_WIDTH},
     settings::GameSettings,
 };
 
 #[derive(Debug, Component)]
 pub struct SpawnTile(pub usize);
 
-fn build_spawners(
-    mut commands: Commands,
-    settings: Res<GameSettings>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
-    let board_calculation = get_square_dim(&settings);
+fn build_spawners(mut commands: Commands, settings: Res<GameSettings>, sprites: Res<BoardSprites>) {
+    let square_dim = get_square_dim(&settings);
 
-    let border_buffer = board_calculation.border_buffer;
-    let square_dim = board_calculation.square_dim;
-    let square_border = board_calculation.square_border;
-
-    let left_aligned = (BOARD_DIM / 2.0) + border_buffer - square_dim - (square_border / 2.0);
-
-    let color = Color::WHITE;
-
-    let mesh = Mesh2dHandle(meshes.add(Rectangle::new(
-        square_dim - square_border,
-        square_dim - square_border,
-    )));
+    let scale = Vec2::splat(square_dim) / SPRITE_WIDTH;
 
     for y in [1, -1].into_iter() {
         for x in (0..settings.board_dim).into_iter() {
@@ -40,14 +21,15 @@ fn build_spawners(
                 x
             };
 
-            let spawner_x = y as f32 * (((x as f32 * square_dim) + square_border) - left_aligned);
+            let x_offset = -y as f32 * ((BOARD_DIM / 2.0) - (square_dim / 2.0));
+            let spawner_x = y as f32 * (x as f32 * square_dim) + x_offset;
             let spawner_y = BOARD_DIM * y as f32;
 
             commands
-                .spawn(MaterialMesh2dBundle {
-                    mesh: mesh.clone(),
-                    material: materials.add(color),
-                    transform: Transform::from_xyz(spawner_x, spawner_y, 1.0),
+                .spawn(SpriteBundle {
+                    texture: sprites.open.clone_weak(),
+                    transform: Transform::from_xyz(spawner_x, spawner_y, 1.0)
+                        .with_scale(scale.extend(1.0)),
                     ..default()
                 })
                 .insert(SpawnTile(index as usize));
@@ -62,14 +44,15 @@ fn build_spawners(
                 y + settings.board_dim
             };
 
+            let y_offset = x as f32 * ((BOARD_DIM / 2.0) - (square_dim / 2.0));
             let spawner_x = BOARD_DIM * x as f32;
-            let spawner_y = -x as f32 * (((y as f32 * square_dim) + square_border) - left_aligned);
+            let spawner_y = -x as f32 * (y as f32 * square_dim) + y_offset;
 
             commands
-                .spawn(MaterialMesh2dBundle {
-                    mesh: mesh.clone(),
-                    material: materials.add(color),
-                    transform: Transform::from_xyz(spawner_x, spawner_y, 1.0),
+                .spawn(SpriteBundle {
+                    texture: sprites.open.clone_weak(),
+                    transform: Transform::from_xyz(spawner_x, spawner_y, 1.0)
+                        .with_scale(scale.extend(1.0)),
                     ..default()
                 })
                 .insert(SpawnTile(index as usize));
@@ -79,17 +62,17 @@ fn build_spawners(
 
 fn update_board_spawner(
     game_state: Res<GameState>,
-    mut children_query: Query<(&SpawnTile, &mut Handle<ColorMaterial>)>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut children_query: Query<(&SpawnTile, &mut Handle<Image>)>,
+    sprites: Res<BoardSprites>,
 ) {
     children_query.iter_mut().for_each(|(tile, mut handle)| {
-        let color = if game_state.drop() == tile.0 {
-            Color::NAVY
+        let sprite = if game_state.drop() == tile.0 {
+            sprites.closed.clone()
         } else {
-            Color::WHITE
+            sprites.open.clone()
         };
 
-        *handle = materials.add(color);
+        *handle = sprite;
     });
 }
 

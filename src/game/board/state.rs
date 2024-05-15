@@ -6,7 +6,7 @@ use crate::{
     logic::{board::GameBoard, error::GameError},
 };
 
-use super::rotate::DropBlockEvent;
+use super::{rotate::DropBlockEvent, sprite::BoardSprites};
 
 #[derive(Component)]
 pub struct BoardTile {
@@ -91,19 +91,19 @@ impl GameState {
 
 fn update_board_children(
     game_state: Res<GameState>,
-    mut children_query: Query<(&BoardTile, &mut Handle<ColorMaterial>)>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut children_query: Query<(&BoardTile, &mut Handle<Image>)>,
+    sprites: Res<BoardSprites>,
 ) {
     let board = game_state.data_board.display_board();
     children_query.iter_mut().for_each(|(tile, mut handle)| {
         if let Some(tile_value) = board.column(tile.x.into()).get::<usize>(tile.y.into()) {
-            let color = if *tile_value > 0 {
-                Color::NAVY
+            let sprite = if *tile_value > 0 {
+                sprites.closed.clone()
             } else {
-                Color::BLACK
+                sprites.open.clone()
             };
 
-            *handle = materials.add(color);
+            *handle = sprite;
         }
     });
 }

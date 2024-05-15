@@ -1,35 +1,24 @@
-use bevy::{
-    prelude::*,
-    sprite::{MaterialMesh2dBundle, Mesh2dHandle},
-};
+use bevy::prelude::*;
 
 use crate::game::board::state::BoardTile;
 
-use self::{rotate::RotateBoardPlugin, state::GameStatePlugin};
+use self::{
+    rotate::RotateBoardPlugin,
+    sprite::{BoardSprites, SpritePlugin},
+    state::GameStatePlugin,
+};
 
 use super::settings::GameSettings;
 
 pub mod rotate;
+pub mod sprite;
 pub mod state;
 
 pub const BOARD_DIM: f32 = 200.0;
+pub const SPRITE_WIDTH: f32 = 64.0;
 
-pub struct BoardCalculations {
-    pub border_buffer: f32,
-    pub square_dim: f32,
-    pub square_border: f32,
-}
-
-pub fn get_square_dim(game_settings: &GameSettings) -> BoardCalculations {
-    let border_buffer = BOARD_DIM * 0.1;
-    let square_dim = (BOARD_DIM - border_buffer) / game_settings.board_dim as f32;
-    let square_border = square_dim * 0.1;
-
-    BoardCalculations {
-        border_buffer,
-        square_dim,
-        square_border,
-    }
+pub fn get_square_dim(settings: &GameSettings) -> f32 {
+    BOARD_DIM / settings.board_dim as f32
 }
 
 #[derive(Component)]
@@ -37,53 +26,40 @@ pub struct Board;
 
 fn setup_board(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    sprites: Res<BoardSprites>,
     game_settings: Res<GameSettings>,
 ) {
-    let mesh = meshes.add(Rectangle::new(BOARD_DIM, BOARD_DIM));
-
-    let color = Color::WHITE;
-
     let ent = commands
-        .spawn(MaterialMesh2dBundle {
-            mesh: Mesh2dHandle(mesh),
-            material: materials.add(color),
-            transform: Transform::default(),
-            ..default()
-        })
-        .insert(Board)
+        .spawn(Board)
+        .insert((
+            GlobalTransform::default(),
+            InheritedVisibility::default(),
+            Transform::default(),
+        ))
         .id();
 
     // Calculate children, everything is center aligned in bevy
-    let board_calculation = get_square_dim(&game_settings);
+    let square_dim = get_square_dim(&game_settings);
 
-    let border_buffer = board_calculation.border_buffer;
-    let square_dim = board_calculation.square_dim;
-    let square_border = board_calculation.square_border;
-
-    let left_aligned = (BOARD_DIM / 2.0) + border_buffer - square_dim - (square_border / 2.0);
-
-    let mesh = Mesh2dHandle(meshes.add(Rectangle::new(
-        square_dim - square_border,
-        square_dim - square_border,
-    )));
-
-    let color = Color::BLACK;
+    let scale = Vec2::from_array([square_dim, square_dim]) / SPRITE_WIDTH;
 
     let mut children = Vec::new();
 
+    let offset = (BOARD_DIM / 2.0) - (square_dim / 2.0);
+
     for y in 0..game_settings.board_dim {
         for x in 0..game_settings.board_dim {
-            let sprite_x = ((x as f32 * square_dim) + square_border) - left_aligned;
-            let sprite_y = -(((y as f32 * square_dim) + square_border) - left_aligned);
+            let sprite_x = x as f32 * square_dim - offset;
+            let sprite_y = -(y as f32 * square_dim) + offset;
+
+            info!("{sprite_x}, {sprite_y}");
 
             children.push(
                 commands
-                    .spawn(MaterialMesh2dBundle {
-                        mesh: mesh.clone(),
-                        material: materials.add(color),
-                        transform: Transform::from_xyz(sprite_x, sprite_y, 1.0),
+                    .spawn(SpriteBundle {
+                        texture: sprites.open.clone_weak(),
+                        transform: Transform::from_xyz(sprite_x, sprite_y, 1.0)
+                            .with_scale(scale.extend(1.0)),
                         ..default()
                     })
                     .insert(BoardTile::new(x, y))
@@ -99,7 +75,7 @@ pub struct BoardPlugin;
 
 impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((RotateBoardPlugin, GameStatePlugin))
+        app.add_plugins((SpritePlugin, RotateBoardPlugin, GameStatePlugin))
             .add_systems(Startup, setup_board);
     }
 }
