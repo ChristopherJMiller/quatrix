@@ -131,8 +131,8 @@ fn handle_block_drops(
             state.update_next_drop(&settings);
         }
 
-        info!("New Board {}", state.data_board.display_board());
-        info!("Next Drop is {}", state.next_drop);
+        debug!("New Board {}", state.data_board.display_board());
+        debug!("Next Drop is {}", state.next_drop);
     }
 }
 

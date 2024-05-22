@@ -52,7 +52,7 @@ fn setup_board(
             let sprite_x = x as f32 * square_dim - offset;
             let sprite_y = -(y as f32 * square_dim) + offset;
 
-            info!("{sprite_x}, {sprite_y}");
+            debug!("{sprite_x}, {sprite_y}");
 
             children.push(
                 commands

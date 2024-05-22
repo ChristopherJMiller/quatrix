@@ -1,3 +1,4 @@
+use bevy::log::{debug, info};
 use nalgebra::{DMatrix, RowDVector};
 
 use super::{error::GameError, insertion::InsertionDirection};
@@ -46,7 +47,7 @@ impl GameBoard {
 
     pub fn place(&mut self, slot: usize) -> Result<(), GameError> {
         let insertion_direction = InsertionDirection::for_board_insertion(&self.board, slot)?;
-        println!("Dropping into {slot} ({:?})", insertion_direction);
+        debug!("Dropping into {slot} ({:?})", insertion_direction);
         let index = insertion_direction.get_side_index(&self.board, slot);
 
         match insertion_direction {

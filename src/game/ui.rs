@@ -2,6 +2,8 @@ use bevy::prelude::*;
 
 use super::board::state::{GameMode, GameState};
 
+const DEFAULT_FONT_PATH: &'static str = "fonts/OxygenMono-Regular.ttf";
+
 #[derive(Default, Component)]
 pub struct ScoreText;
 
@@ -10,7 +12,7 @@ pub struct GameOverText;
 
 fn display_scoring(state: Res<GameState>, mut text: Query<&mut Text, With<ScoreText>>) {
     let mut text = text.single_mut();
-    text.sections[0].value = format!("Score: {}", state.data_board.score());
+    text.sections[0].value = format!("{:0>9}0", state.data_board.score());
 }
 
 fn display_game_over(state: Res<GameState>, mut text: Query<&mut Text, With<GameOverText>>) {
@@ -27,7 +29,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         TextBundle::from_section(
             "Score",
             TextStyle {
-                font: asset_server.load("fonts/quit13.ttf"),
+                font: asset_server.load(DEFAULT_FONT_PATH),
                 font_size: 32.0,
                 ..default()
             },
@@ -46,7 +48,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         TextBundle::from_section(
             "Game Over",
             TextStyle {
-                font: asset_server.load("fonts/quit13.ttf"),
+                font: asset_server.load(DEFAULT_FONT_PATH),
                 font_size: 64.0,
                 color: Color::RED,
                 ..default()

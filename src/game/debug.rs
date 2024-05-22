@@ -6,7 +6,7 @@ fn print_history(game_state: Res<GameState>, mut input_pressed: EventReader<Prin
     let pressed = input_pressed.read().count() > 0;
 
     if pressed {
-        info!(
+        debug!(
             "{:?}, Next Drop {}",
             game_state.placement_history, game_state.next_drop
         );
