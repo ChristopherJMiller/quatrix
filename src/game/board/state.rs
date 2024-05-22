@@ -2,11 +2,11 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::{
-    game::{controls::RestartPressed, settings::GameSettings},
-    logic::{board::GameBoard, error::GameError},
+    game::{board::effects::ElasticForce, controls::RestartPressed, settings::GameSettings},
+    logic::{board::GameBoard, error::GameError, insertion::InsertionDirection},
 };
 
-use super::{rotate::DropBlockEvent, sprite::BoardSprites};
+use super::{rotate::DropBlockEvent, sprite::BoardSprites, Board};
 
 #[derive(Component)]
 pub struct BoardTile {
@@ -108,12 +108,29 @@ fn update_board_children(
     });
 }
 
+fn push_effect_vector(state: &GameState, base_vec: Vec2) -> Result<Vec2, GameError> {
+    let direction =
+        InsertionDirection::for_board_insertion(state.data_board.board(), state.drop())?;
+
+    let offset_vector = Vec2::from_array(match direction {
+        InsertionDirection::FromTop => [0.0, -1.0],
+        InsertionDirection::FromRight => [-1.0, 0.0],
+        InsertionDirection::FromBottom => [0.0, 1.0],
+        InsertionDirection::FromLeft => [1.0, 0.0],
+    });
+
+    Ok(base_vec * offset_vector)
+}
+
 fn handle_block_drops(
     mut drop_block: EventReader<DropBlockEvent>,
     mut state: ResMut<GameState>,
     settings: Res<GameSettings>,
+    mut command: Commands,
+    board_query: Query<(Entity, &Transform), With<Board>>,
 ) {
     for _ in drop_block.read() {
+        // Mutable operation, updates board state
         if let Err(err) = state.place() {
             match err {
                 GameError::InvalidPlacementLocation(placement) => {
@@ -128,6 +145,14 @@ fn handle_block_drops(
                 }
             }
         } else {
+            // Apply place effect, can assume single board and successful placement direction
+            let (board, trans) = board_query.single();
+            command.entity(board).insert(ElasticForce::new(
+                trans.translation.clone().truncate(),
+                push_effect_vector(&state, Vec2::splat(200.0)).unwrap(),
+            ));
+
+            // Update next baord drop
             state.update_next_drop(&settings);
         }
 

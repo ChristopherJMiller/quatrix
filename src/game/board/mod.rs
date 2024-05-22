@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use crate::game::board::state::BoardTile;
 
 use self::{
+    effects::EffectsPlugin,
     rotate::RotateBoardPlugin,
     sprite::{BoardSprites, SpritePlugin},
     state::GameStatePlugin,
@@ -10,6 +11,7 @@ use self::{
 
 use super::settings::GameSettings;
 
+pub mod effects;
 pub mod rotate;
 pub mod sprite;
 pub mod state;
@@ -75,7 +77,12 @@ pub struct BoardPlugin;
 
 impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((SpritePlugin, RotateBoardPlugin, GameStatePlugin))
-            .add_systems(Startup, setup_board);
+        app.add_plugins((
+            SpritePlugin,
+            RotateBoardPlugin,
+            GameStatePlugin,
+            EffectsPlugin,
+        ))
+        .add_systems(Startup, setup_board);
     }
 }
