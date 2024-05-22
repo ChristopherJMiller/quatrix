@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use crate::game::board::state::BoardTile;
 
 use self::{
+    dropping::DroppingAnimationPlugin,
     effects::EffectsPlugin,
     rotate::RotateBoardPlugin,
     sprite::{BoardSprites, SpritePlugin},
@@ -11,6 +12,7 @@ use self::{
 
 use super::settings::GameSettings;
 
+pub mod dropping;
 pub mod effects;
 pub mod rotate;
 pub mod sprite;
@@ -26,6 +28,15 @@ pub fn get_square_dim(settings: &GameSettings) -> f32 {
 #[derive(Component)]
 pub struct Board;
 
+pub fn tile_dimensions(game_settings: &GameSettings) -> (f32, Vec2) {
+    // Calculate children, everything is center aligned in bevy
+    let square_dim = get_square_dim(&game_settings);
+
+    let scale = Vec2::from_array([square_dim, square_dim]) / SPRITE_WIDTH;
+
+    (square_dim, scale)
+}
+
 fn setup_board(
     mut commands: Commands,
     sprites: Res<BoardSprites>,
@@ -40,10 +51,7 @@ fn setup_board(
         ))
         .id();
 
-    // Calculate children, everything is center aligned in bevy
-    let square_dim = get_square_dim(&game_settings);
-
-    let scale = Vec2::from_array([square_dim, square_dim]) / SPRITE_WIDTH;
+    let (square_dim, scale) = tile_dimensions(&game_settings);
 
     let mut children = Vec::new();
 
@@ -59,7 +67,7 @@ fn setup_board(
             children.push(
                 commands
                     .spawn(SpriteBundle {
-                        texture: sprites.open.clone_weak(),
+                        texture: sprites.open.clone(),
                         transform: Transform::from_xyz(sprite_x, sprite_y, 1.0)
                             .with_scale(scale.extend(1.0)),
                         ..default()
@@ -82,6 +90,7 @@ impl Plugin for BoardPlugin {
             RotateBoardPlugin,
             GameStatePlugin,
             EffectsPlugin,
+            DroppingAnimationPlugin,
         ))
         .add_systems(Startup, setup_board);
     }

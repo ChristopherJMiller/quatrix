@@ -7,6 +7,7 @@ use crate::{
 
 use super::{
     super::controls::{RotateLeftPressed, RotateRightPressed},
+    dropping::DropAnimation,
     state::GameState,
     Board,
 };
@@ -100,7 +101,7 @@ fn rotate_board(
     time: Res<Time>,
     mut game_state: ResMut<GameState>,
     mut board: Query<(Entity, &mut Transform, &mut RotateBoard), With<Board>>,
-    mut drop_block: EventWriter<DropBlockEvent>,
+    mut drop_block: EventWriter<DropAnimation>,
 ) {
     if let Ok((ent, mut trans, mut rotate_board)) = board.get_single_mut() {
         if let Some(degrees) = rotate_board.rotate(time.delta_seconds()) {
@@ -129,7 +130,7 @@ fn rotate_board(
                 game_state.data_board.rotate_left();
             }
 
-            drop_block.send(DropBlockEvent::default());
+            drop_block.send_default();
         }
     }
 }

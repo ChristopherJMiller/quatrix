@@ -1,4 +1,4 @@
-use bevy::log::{debug, info};
+use bevy::log::debug;
 use nalgebra::{DMatrix, RowDVector};
 
 use super::{error::GameError, insertion::InsertionDirection};
@@ -45,51 +45,60 @@ impl GameBoard {
         self.score
     }
 
-    pub fn place(&mut self, slot: usize) -> Result<(), GameError> {
+    /// Returns the coordinate where the tile was placed (column, row)
+    pub fn place(&mut self, slot: usize) -> Result<(usize, usize), GameError> {
         let insertion_direction = InsertionDirection::for_board_insertion(&self.board, slot)?;
         debug!("Dropping into {slot} ({:?})", insertion_direction);
         let index = insertion_direction.get_side_index(&self.board, slot);
 
-        match insertion_direction {
+        let pos = match insertion_direction {
             InsertionDirection::FromTop => {
                 let mut column = self.board.column_mut(index);
                 let slice = column.as_mut_slice();
 
-                insertion_direction.place(slice)?;
+                (index, insertion_direction.place(slice)?)
             }
             InsertionDirection::FromLeft => {
                 let row = self.board.row(index);
                 let mut data = row.iter().map(|&x| x).collect::<Vec<_>>();
 
-                insertion_direction.place(&mut data)?;
+                let res = insertion_direction.place(&mut data)?;
 
                 self.board.set_row(
                     index,
                     &RowDVector::from_row_iterator(data.len(), data.into_iter()),
                 );
+
+                (res, index)
             }
             InsertionDirection::FromRight => {
                 let row = self.board.row(index);
                 let mut data = row.iter().rev().map(|&x| x).collect::<Vec<_>>();
 
-                insertion_direction.place(&mut data)?;
+                let res = insertion_direction.place(&mut data)?;
 
                 self.board.set_row(
                     index,
                     &RowDVector::from_row_iterator(data.len(), data.into_iter().rev()),
                 );
+
+                (res, index)
             }
             InsertionDirection::FromBottom => {
                 let column = self.board.column_mut(index);
                 let mut data = column.iter().rev().map(|&x| x).collect::<Vec<_>>();
 
-                insertion_direction.place(&mut data)?;
+                let len = data.len();
+
+                let res = insertion_direction.place(&mut data)?;
 
                 data.reverse();
 
-                self.board.set_column(index, &data.into())
+                self.board.set_column(index, &data.into());
+
+                (index, len.saturating_sub(res))
             }
-        }
+        };
 
         self.score += 1;
 
@@ -99,7 +108,7 @@ impl GameBoard {
 
         self.update_display_board(0);
 
-        Ok(())
+        Ok(pos)
     }
 
     fn check_row(&self, insertion_direction: InsertionDirection, index: usize) -> bool {

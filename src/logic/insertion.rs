@@ -57,8 +57,8 @@ impl InsertionDirection {
         Err(GameError::InvalidPlacementLocation(slot))
     }
 
-    /// For a slice, inseration begins at 0 and goes to the length of the slice.
-    pub fn place(&self, slice: &mut [u8]) -> Result<(), GameError> {
+    /// For a slice, insertion begins at 0 and goes to the length of the slice.
+    pub fn place(&self, slice: &mut [u8]) -> Result<usize, GameError> {
         let first_one_found = slice.iter().position(|&x| x == 1);
 
         if let Some(one_found) = first_one_found {
@@ -66,7 +66,7 @@ impl InsertionDirection {
             if one_found > 0 {
                 if slice.get(one_found - 1).map(|&x| x == 0).is_some_and(|x| x) {
                     slice[one_found - 1] = 1;
-                    return Ok(());
+                    return Ok(one_found - 1);
                 }
             }
 
@@ -76,7 +76,7 @@ impl InsertionDirection {
             slice[slice.len() - 1] = 1;
         }
 
-        Ok(())
+        Ok(slice.len() - 1)
     }
 }
 

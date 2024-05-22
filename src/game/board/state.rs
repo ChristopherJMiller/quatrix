@@ -42,6 +42,8 @@ pub struct GameState {
     pub enable_input: bool,
     /// Current mode of play
     pub mode: GameMode,
+    /// Dropping animation is playing
+    pub dropping: bool,
 }
 
 impl GameState {
@@ -63,6 +65,7 @@ impl GameState {
             placement_history: Vec::new(),
             enable_input: true,
             mode: GameMode::Playing,
+            dropping: false,
         }
     }
 
@@ -84,6 +87,7 @@ impl GameState {
 
         self.data_board.place(drop)?;
         self.placement_history.push(drop);
+        self.dropping = false;
 
         Ok(())
     }

@@ -66,7 +66,7 @@ fn update_board_spawner(
     sprites: Res<BoardSprites>,
 ) {
     children_query.iter_mut().for_each(|(tile, mut handle)| {
-        let sprite = if game_state.drop() == tile.0 {
+        let sprite = if !game_state.dropping && game_state.drop() == tile.0 {
             sprites.closed.clone()
         } else {
             sprites.open.clone()
