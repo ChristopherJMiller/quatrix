@@ -1,4 +1,4 @@
-name: Build Game
+name: Build Quatrix
 
 on:
   push:
@@ -9,72 +9,50 @@ env:
   CARGO_TERM_COLOR: always
   ITCH_USERNAME: alumux
   ITCH_GAME_ID: quatrix
+  RUST_TOOLCHAIN: 1.77
 
 jobs:
-  build-windows:
-    runs-on: ubuntu-latest
+  build:
+    strategy:
+      matrix:
+        include:
+          - channel: linux
+            os: ubuntu-latest
+            toolchain: x86_64-unknown-linux-gnu
+          - channel: windows
+            os: windows-latest
+            toolchain: x86_64-pc-windows-msvc
+          - channel: mac
+            os: macOS-latest
+            toolchain: x86_64-apple-darwin
+          - channel: mac
+            os: macOS-latest
+            toolchain:  aarch64-apple-darwin
+    runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v2
-      with:
-        lfs: true
-    - name: Install required packages
-      run: sudo apt-get update && sudo apt-get install -y libasound2-dev libudev-dev libxcb-xfixes0-dev libxcb-shape0-dev cmake mingw-w64 zip
-    - name: Install latest stable
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
-    - name: Install Windows Target
-      run: rustup target add x86_64-pc-windows-gnu
-    - name: Get Version
-      id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
-    - name: Setup Cache
-      uses: Swatinem/rust-cache@v1
-    - name: Build Windows Game
-      env:
-        VERSION: ${{ steps.get_version.outputs.VERSION }}
-      run: ./install_windows_client.sh
-    - run: where libstdc++-6.dll
-    - run: where libgcc_s_seh-1.dll
-    - run: where libwinpthread-1.dll
-    - name: Publish to Itch.io
-      uses: KikimoraGames/itch-publish@v0.0.3
-      with:
-        butlerApiKey: ${{ secrets.BUTLER_API_KEY }}
-        gameData: windows
-        itchUsername: ${{ env.ITCH_USERNAME }}
-        itchGameId: ${{ env.ITCH_GAME_ID }}
-        buildNumber: ${{ steps.get_version.outputs.VERSION }}
-        buildChannel: windows
-  build-linux:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        lfs: true
-    - name: Install required packages
-      run: sudo apt-get update && sudo apt-get install -y libasound2-dev libudev-dev libxcb-xfixes0-dev libxcb-shape0-dev cmake mingw-w64 zip
-    - name: Install latest stable
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: 1.77
-        override: true
-    - name: Get Version
-      id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
-    - name: Setup Cache
-      uses: Swatinem/rust-cache@v1
-    - name: Build Linux Game
-      env:
-        VERSION: ${{ steps.get_version.outputs.VERSION }}
-      run: ./install_linux_client.sh
-    - name: Publish to Itch.io
-      uses: KikimoraGames/itch-publish@v0.0.3
-      with:
-        butlerApiKey: ${{ secrets.BUTLER_API_KEY }}
-        gameData: linux
-        itchUsername: ${{ env.ITCH_USERNAME }}
-        itchGameId: ${{ env.ITCH_GAME_ID }}
-        buildNumber: ${{ steps.get_version.outputs.VERSION }}
-        buildChannel: linux
+      - name: Get Version from Tag
+        uses: olegtarasov/get-tag@v2.1.2
+        id: get_version
+      - name: Checkout with LFS
+        uses: actions/checkout@v2
+        with:
+          lfs: true
+      - name: Install Linux Dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update; sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
+      - name: Build Game
+        run: cargo install --locked --root install --target ${{ matrix.toolchain }} --path .
+      - name: Copy In Assets
+        uses: Lyoko-Jeremie/js-copy-github-action@master
+        with:
+          source: assets
+          target: install/bin/assets
+      - name: Publish to Itch.io
+        uses: KikimoraGames/itch-publish@v0.0.3
+        with:
+          butlerApiKey: ${{ secrets.BUTLER_API_KEY }}
+          gameData: install/bin/
+          itchUsername: ${{ env.ITCH_USERNAME }}
+          itchGameId: ${{ env.ITCH_GAME_ID }}
+          buildNumber: ${{ steps.get_version.outputs.tag }}
+          buildChannel: ${{ matrix.channel }}
