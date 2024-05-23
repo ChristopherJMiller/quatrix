@@ -45,13 +45,15 @@ jobs:
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
           targets: ${{ matrix.target }}
+      - name: Add Target
+        run: rustup target add ${{ matrix.target }}
       - name: Set Environment On Mac ARM 
         if: matrix.target == 'aarch64-apple-darwin'
         # https://github.com/bevyengine/bevy_github_ci_template/blob/main/.github/workflows/release.yaml macOS 11 was the first version to support ARM
         run: |
           export MACOSX_DEPLOYMENT_TARGET="11"
       - name: Build Game
-        run: cargo install --locked --root install --path . --target ${{ env.RUST_TOOLCHAIN }}-${{ matrix.target }}
+        run: cargo install --locked --root install --path . --target ${{ matrix.target }}
       - name: Copy In Assets
         uses: Lyoko-Jeremie/js-copy-github-action@master
         with:
