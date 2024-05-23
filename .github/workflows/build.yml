@@ -67,6 +67,8 @@ jobs:
       matrix:
         channel: [linux, windows, mac-intel, mac-silicon]
     runs-on: ubuntu-latest
+    needs:
+      - build
     steps:
       - name: Get Version from Tag
         uses: olegtarasov/get-tag@v2.1.2
