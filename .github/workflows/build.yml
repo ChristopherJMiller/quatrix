@@ -16,23 +16,21 @@ jobs:
     strategy:
       matrix:
         include:
-          - channel: linux
+          - name: 
+            channel: linux
             os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
           - channel: windows
             os: windows-latest
             target: x86_64-pc-windows-msvc
-          - channel: mac
+          - channel: mac-intel
             os: macOS-latest
             target: x86_64-apple-darwin
-          - channel: mac
+          - channel: mac-silicon
             os: macOS-latest
             target: aarch64-apple-darwin
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Get Version from Tag
-        uses: olegtarasov/get-tag@v2.1.2
-        id: get_version
       - name: Checkout with LFS
         uses: actions/checkout@v2
         with:
@@ -45,8 +43,6 @@ jobs:
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
           targets: ${{ matrix.target }}
-      - name: Add Target
-        run: rustup target add ${{ matrix.target }}
       - name: Set Environment On Mac ARM 
         if: matrix.target == 'aarch64-apple-darwin'
         # https://github.com/bevyengine/bevy_github_ci_template/blob/main/.github/workflows/release.yaml macOS 11 was the first version to support ARM
@@ -59,11 +55,32 @@ jobs:
         with:
           source: assets
           target: install/bin/assets
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          path: install/bin/
+          name: ${{ matrix.channel }}
+          retention-days: 1
+
+  publish:
+    strategy:
+      matrix:
+        channel: [linux, windows, mac-intel, mac-silicon]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Version from Tag
+        uses: olegtarasov/get-tag@v2.1.2
+        id: get_version
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ matrix.channel }}
+          path: build
       - name: Publish to Itch.io
         uses: KikimoraGames/itch-publish@v0.0.3
         with:
           butlerApiKey: ${{ secrets.BUTLER_API_KEY }}
-          gameData: install/bin/
+          gameData: build
           itchUsername: ${{ env.ITCH_USERNAME }}
           itchGameId: ${{ env.ITCH_GAME_ID }}
           buildNumber: ${{ steps.get_version.outputs.tag }}
