@@ -51,10 +51,7 @@ jobs:
       - name: Build Game
         run: cargo install --locked --root install --path . --target ${{ matrix.target }}
       - name: Copy In Assets
-        uses: Lyoko-Jeremie/js-copy-github-action@master
-        with:
-          source: assets
-          target: install/bin/assets
+        run: cp -r assets install/bin/assets
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
         with:
