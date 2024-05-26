@@ -11,6 +11,8 @@ nalgebra = "0.32.5"
 thiserror = "1"
 rand = "0.8.5"
 colorgrad = "0.6.2"
+noise = "0.9"
+image = "0.24"
 
 [profile.release]
 strip = true
