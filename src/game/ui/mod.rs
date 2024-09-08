@@ -1,4 +1,7 @@
+mod control;
+
 use bevy::prelude::*;
+use control::{build_control_ui, update_controls_ui, ActivePlatform};
 
 use super::board::state::{GameMode, GameState};
 
@@ -68,7 +71,9 @@ pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup)
-            .add_systems(PostUpdate, (display_scoring, display_game_over));
+        app.add_systems(Startup, (setup, build_control_ui))
+            .add_systems(PostUpdate, (display_scoring, display_game_over))
+            .add_systems(FixedUpdate, update_controls_ui)
+            .init_resource::<ActivePlatform>();
     }
 }

@@ -9,7 +9,7 @@ mod background;
 mod board;
 mod controls;
 mod debug;
-mod settings;
+pub mod settings;
 mod spawn;
 mod ui;
 

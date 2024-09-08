@@ -3,7 +3,7 @@ use bevy::{
     prelude::*,
     window::{PresentMode, WindowTheme},
 };
-use game::GamePlugins;
+use game::{settings::Resolution, GamePlugins};
 
 mod game;
 mod logic;
@@ -14,7 +14,7 @@ fn main() {
             primary_window: Some(Window {
                 title: "Quatrix".into(),
                 name: Some("quatrix.app".into()),
-                resolution: (1024., 768.).into(),
+                resolution: Resolution::default().medium.into(),
                 present_mode: PresentMode::AutoVsync,
                 prevent_default_event_handling: false,
                 window_theme: Some(WindowTheme::Dark),
@@ -33,6 +33,7 @@ fn main() {
         .add_plugins(GamePlugins)
         .add_systems(Startup, setup_camera)
         .add_systems(Update, make_visible)
+        .insert_resource(Time::<Fixed>::from_seconds(0.5))
         .run();
 }
 
