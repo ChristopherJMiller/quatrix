@@ -3,6 +3,8 @@ use std::fmt::{Display, Formatter};
 use bevy::prelude::*;
 use strum::{EnumIter, IntoEnumIterator};
 
+use crate::game::ui::DEFAULT_FONT_PATH;
+
 #[derive(Component, EnumIter, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ControlPlatform {
     Pc,
@@ -105,7 +107,14 @@ pub fn build_control_ui(mut command: Commands, asset_server: Res<AssetServer>) {
             style.left = Val::Px(SIZE + (MARGIN * 2.0));
 
             command.spawn((
-                TextBundle::from(format!("{control}")).with_style(style),
+                TextBundle::from_section(
+                    format!("{control}"),
+                    TextStyle {
+                        font: asset_server.load(DEFAULT_FONT_PATH),
+                        ..Default::default()
+                    },
+                )
+                .with_style(style),
                 platform,
             ));
         }
