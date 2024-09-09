@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::state::AppState;
+
 use super::{
     board::{get_square_dim, sprite::BoardSprites, state::GameState, BOARD_DIM, SPRITE_WIDTH},
     settings::GameSettings,
@@ -80,7 +82,10 @@ pub struct SpawnPlugin;
 
 impl Plugin for SpawnPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, build_spawners)
-            .add_systems(Update, update_board_spawner);
+        app.add_systems(OnEnter(AppState::InGame), build_spawners)
+            .add_systems(
+                Update,
+                update_board_spawner.run_if(in_state(AppState::InGame)),
+            );
     }
 }

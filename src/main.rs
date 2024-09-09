@@ -2,14 +2,20 @@ use bevy::{
     core::FrameCount,
     prelude::*,
     window::{PresentMode, WindowTheme},
+    winit::WinitSettings,
 };
 use game::{settings::Resolution, GamePlugins};
+use menu::MenuPlugins;
+use state::AppState;
 
 mod game;
 mod logic;
+mod menu;
+mod state;
 
 fn main() {
     App::new()
+        .init_state::<AppState>()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Quatrix".into(),
@@ -31,9 +37,10 @@ fn main() {
             ..default()
         }))
         .add_plugins(GamePlugins)
+        .add_plugins(MenuPlugins)
         .add_systems(Startup, setup_camera)
         .add_systems(Update, make_visible)
-        .insert_resource(Time::<Fixed>::from_seconds(0.5))
+        .insert_resource(WinitSettings::game())
         .run();
 }
 

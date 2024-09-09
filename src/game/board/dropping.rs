@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 
-use crate::game::{settings::GameSettings, spawn::SpawnTile};
+use crate::{
+    game::{settings::GameSettings, spawn::SpawnTile},
+    state::AppState,
+};
 
 use super::{
     effects::TranslateEffect,
@@ -90,7 +93,8 @@ impl Plugin for DroppingAnimationPlugin {
             (
                 handle_dropping_animation_setup,
                 handle_transition_to_block_drop_event,
-            ),
+            )
+                .run_if(in_state(AppState::InGame)),
         );
     }
 }

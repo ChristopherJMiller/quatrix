@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::state::AppState;
+
 use super::{board::state::GameState, controls::PrintHistoryPressed};
 
 fn print_history(game_state: Res<GameState>, mut input_pressed: EventReader<PrintHistoryPressed>) {
@@ -17,6 +19,6 @@ pub struct DebugPlugin;
 
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, print_history);
+        app.add_systems(Update, print_history.run_if(in_state(AppState::InGame)));
     }
 }

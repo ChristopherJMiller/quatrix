@@ -4,6 +4,7 @@ use rand::Rng;
 use crate::{
     game::{board::effects::ElasticForce, controls::RestartPressed, settings::GameSettings},
     logic::{board::GameBoard, error::GameError, insertion::InsertionDirection},
+    state::AppState,
 };
 
 use super::{rotate::DropBlockEvent, sprite::BoardSprites, Board};
@@ -184,8 +185,11 @@ impl Plugin for GameStatePlugin {
         let default_settings = GameSettings::default();
 
         app.insert_resource(GameState::new(default_settings.board_dim as usize))
-            .add_systems(Update, handle_restart)
-            .add_systems(PostUpdate, (update_board_children, handle_block_drops));
+            .add_systems(Update, handle_restart.run_if(in_state(AppState::InGame)))
+            .add_systems(
+                PostUpdate,
+                (update_board_children, handle_block_drops).run_if(in_state(AppState::InGame)),
+            );
     }
 }
 

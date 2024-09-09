@@ -5,8 +5,9 @@ use strum::{EnumIter, IntoEnumIterator};
 
 use crate::game::ui::DEFAULT_FONT_PATH;
 
-#[derive(Component, EnumIter, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Component, EnumIter, Debug, Clone, Copy, PartialEq, Eq, Hash, States, Default)]
 pub enum ControlPlatform {
+    #[default]
     Pc,
     Steamdeck,
     Xbox,
@@ -28,15 +29,6 @@ impl Display for ControlIntention {
             ControlIntention::RotateLeft => write!(f, "Rotate Counter Clockwise"),
             ControlIntention::RotateRight => write!(f, "Rotate Clockwise"),
         }
-    }
-}
-
-#[derive(Resource, Debug, Clone, Copy)]
-pub struct ActivePlatform(pub ControlPlatform);
-
-impl Default for ActivePlatform {
-    fn default() -> Self {
-        Self(ControlPlatform::Pc)
     }
 }
 
@@ -79,7 +71,7 @@ fn get_image_handle(
 
 pub fn build_control_ui(mut command: Commands, asset_server: Res<AssetServer>) {
     const MARGIN: f32 = 3.0;
-    const SIZE: f32 = 24.0;
+    const SIZE: f32 = 36.0;
 
     for platform in ControlPlatform::iter() {
         for (i, control) in ControlIntention::iter().enumerate() {
@@ -89,7 +81,11 @@ pub fn build_control_ui(mut command: Commands, asset_server: Res<AssetServer>) {
                 height: Val::Px(SIZE),
                 left: Val::Px(MARGIN),
                 bottom: Val::Px(i as f32 * (SIZE + MARGIN) + MARGIN),
-                display: bevy::ui::Display::None,
+                display: if platform == ControlPlatform::Pc {
+                    bevy::ui::Display::default()
+                } else {
+                    bevy::ui::Display::None
+                },
                 ..Default::default()
             };
 
@@ -104,13 +100,17 @@ pub fn build_control_ui(mut command: Commands, asset_server: Res<AssetServer>) {
                 platform,
             ));
 
+            // Adjust for text styling
             style.left = Val::Px(SIZE + (MARGIN * 2.0));
+            style.width = Val::Px(400.0);
+            style.bottom = Val::Px(i as f32 * (SIZE + MARGIN) - (SIZE / 4.0));
 
             command.spawn((
                 TextBundle::from_section(
                     format!("{control}"),
                     TextStyle {
                         font: asset_server.load(DEFAULT_FONT_PATH),
+                        font_size: 20.0,
                         ..Default::default()
                     },
                 )
@@ -123,15 +123,17 @@ pub fn build_control_ui(mut command: Commands, asset_server: Res<AssetServer>) {
 
 pub fn update_controls_ui(
     mut control_ui: Query<(&mut Style, &ControlPlatform)>,
-    active_platform: Res<ActivePlatform>,
+    mut transitions: EventReader<StateTransitionEvent<ControlPlatform>>,
 ) {
-    let active = active_platform.0;
+    for transition in transitions.read() {
+        let active = transition.after;
 
-    for (mut style, platform) in &mut control_ui {
-        if platform == &active {
-            style.display = bevy::ui::Display::DEFAULT;
-        } else {
-            style.display = bevy::ui::Display::None;
+        for (mut style, platform) in &mut control_ui {
+            if platform == &active {
+                style.display = bevy::ui::Display::DEFAULT;
+            } else {
+                style.display = bevy::ui::Display::None;
+            }
         }
     }
 }

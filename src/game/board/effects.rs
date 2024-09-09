@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::state::AppState;
+
 #[derive(Component)]
 pub struct TranslateEffect {
     pub starting_location: Vec2,
@@ -140,6 +142,9 @@ pub struct EffectsPlugin;
 
 impl Plugin for EffectsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (handle_elastic_force, handle_translate_effect));
+        app.add_systems(
+            Update,
+            (handle_elastic_force, handle_translate_effect).run_if(in_state(AppState::InGame)),
+        );
     }
 }

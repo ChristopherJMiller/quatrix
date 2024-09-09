@@ -11,7 +11,7 @@ mod controls;
 mod debug;
 pub mod settings;
 mod spawn;
-mod ui;
+pub mod ui;
 
 pub struct GamePlugins;
 

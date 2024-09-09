@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use crate::{
     game::controls::{MinusOffsetPressed, PlusOffsetPressed},
     logic::insertion::InsertionDirection,
+    state::AppState,
 };
 
 use super::{
@@ -188,7 +189,8 @@ impl Plugin for RotateBoardPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<DropBlockEvent>().add_systems(
             Update,
-            (offset, (handle_rotate_events, rotate_board).chain()),
+            (offset, (handle_rotate_events, rotate_board).chain())
+                .run_if(in_state(AppState::InGame)),
         );
     }
 }

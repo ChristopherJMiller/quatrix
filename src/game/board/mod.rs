@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::game::board::state::BoardTile;
+use crate::{game::board::state::BoardTile, state::AppState};
 
 use self::{
     dropping::DroppingAnimationPlugin,
@@ -92,6 +92,6 @@ impl Plugin for BoardPlugin {
             EffectsPlugin,
             DroppingAnimationPlugin,
         ))
-        .add_systems(Startup, setup_board);
+        .add_systems(OnEnter(AppState::InGame), setup_board);
     }
 }

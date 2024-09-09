@@ -1,5 +1,7 @@
 use bevy::{input::keyboard::KeyboardInput, prelude::*};
 
+use crate::state::AppState;
+
 #[derive(Event, Default)]
 pub struct PlusOffsetPressed;
 
@@ -66,6 +68,6 @@ impl Plugin for ControlsPlugin {
             .add_event::<RotateRightPressed>()
             .add_event::<PrintHistoryPressed>()
             .add_event::<RestartPressed>()
-            .add_systems(PreUpdate, handle_input);
+            .add_systems(PreUpdate, handle_input.run_if(in_state(AppState::InGame)));
     }
 }

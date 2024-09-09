@@ -14,12 +14,12 @@ impl Default for GradientBackground {
 
 impl GradientBackground {
     pub fn build(&self, seed: u32) -> DynamicImage {
-        let grad = colorgrad::cubehelix_default();
+        let grad = colorgrad::magma();
 
         let scale = 0.05;
 
         let ns = noise::OpenSimplex::new(self.0 * seed);
-        let mut imgbuf = image::ImageBuffer::new(25, 25);
+        let mut imgbuf = image::ImageBuffer::new(32, 32);
 
         for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
             let t = ns.get([x as f64 * scale, y as f64 * scale]);

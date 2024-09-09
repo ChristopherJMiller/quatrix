@@ -1,11 +1,13 @@
 mod control;
 
 use bevy::prelude::*;
-use control::{build_control_ui, update_controls_ui, ActivePlatform};
+use control::{build_control_ui, update_controls_ui, ControlPlatform};
+
+use crate::state::AppState;
 
 use super::board::state::{GameMode, GameState};
 
-const DEFAULT_FONT_PATH: &'static str = "fonts/OxygenMono-Regular.ttf";
+pub const DEFAULT_FONT_PATH: &'static str = "fonts/OxygenMono-Regular.ttf";
 
 #[derive(Default, Component)]
 pub struct ScoreText;
@@ -71,9 +73,15 @@ pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, (setup, build_control_ui))
-            .add_systems(PostUpdate, (display_scoring, display_game_over))
-            .add_systems(FixedUpdate, update_controls_ui)
-            .init_resource::<ActivePlatform>();
+        app.add_systems(OnEnter(AppState::InGame), (setup, build_control_ui))
+            .add_systems(
+                PostUpdate,
+                (display_scoring, display_game_over).run_if(in_state(AppState::InGame)),
+            )
+            .add_systems(
+                Update,
+                update_controls_ui.run_if(in_state(AppState::InGame)),
+            )
+            .init_state::<ControlPlatform>();
     }
 }
