@@ -105,8 +105,9 @@ pub fn build_control_ui(mut command: Commands, asset_server: Res<AssetServer>) {
             style.width = Val::Px(400.0);
             style.bottom = Val::Px(i as f32 * (SIZE + MARGIN) - (SIZE / 4.0));
 
-            command.spawn((
-                TextBundle::from_section(
+            // Do only once
+            if i == 0 {
+                command.spawn((TextBundle::from_section(
                     format!("{control}"),
                     TextStyle {
                         font: asset_server.load(DEFAULT_FONT_PATH),
@@ -114,9 +115,8 @@ pub fn build_control_ui(mut command: Commands, asset_server: Res<AssetServer>) {
                         ..Default::default()
                     },
                 )
-                .with_style(style),
-                platform,
-            ));
+                .with_style(style),));
+            }
         }
     }
 }
