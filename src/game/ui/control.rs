@@ -75,6 +75,8 @@ pub fn build_control_ui(mut command: Commands, asset_server: Res<AssetServer>) {
 
     for platform in ControlPlatform::iter() {
         for (i, control) in ControlIntention::iter().enumerate() {
+            // TODO this can be refactored to use nodes with children to better align flexbox elements
+
             let mut style = Style {
                 position_type: PositionType::Absolute,
                 width: Val::Px(SIZE),
