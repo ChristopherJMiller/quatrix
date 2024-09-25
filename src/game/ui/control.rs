@@ -24,10 +24,10 @@ pub enum ControlIntention {
 impl Display for ControlIntention {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            ControlIntention::ShiftUp => write!(f, "Shift Up"),
-            ControlIntention::ShiftDown => write!(f, "Shift Down"),
-            ControlIntention::RotateLeft => write!(f, "Rotate Counter Clockwise"),
-            ControlIntention::RotateRight => write!(f, "Rotate Clockwise"),
+            ControlIntention::ShiftUp => write!(f, "Shift Block Clockwise"),
+            ControlIntention::ShiftDown => write!(f, "Shift Block Counter Clockwise"),
+            ControlIntention::RotateLeft => write!(f, "Rotate Board Counter Clockwise"),
+            ControlIntention::RotateRight => write!(f, "Rotate Board Clockwise"),
         }
     }
 }
@@ -69,58 +69,71 @@ fn get_image_handle(
     asset_server.load(path)
 }
 
-pub fn build_control_ui(mut command: Commands, asset_server: Res<AssetServer>) {
-    const MARGIN: f32 = 3.0;
-    const SIZE: f32 = 36.0;
+pub fn build_control_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
+    const MARGIN: Val = Val::Px(3.0);
+    const SIZE: Val = Val::Px(36.0);
 
-    for platform in ControlPlatform::iter() {
-        for (i, control) in ControlIntention::iter().enumerate() {
-            // TODO this can be refactored to use nodes with children to better align flexbox elements
-
-            let mut style = Style {
-                position_type: PositionType::Absolute,
-                width: Val::Px(SIZE),
-                height: Val::Px(SIZE),
-                left: Val::Px(MARGIN),
-                bottom: Val::Px(i as f32 * (SIZE + MARGIN) + MARGIN),
-                display: if platform == ControlPlatform::Pc {
-                    bevy::ui::Display::default()
-                } else {
-                    bevy::ui::Display::None
-                },
+    commands
+        .spawn(NodeBundle {
+            style: Style {
+                width: Val::Percent(20.),
+                height: Val::Percent(100.),
+                flex_direction: FlexDirection::ColumnReverse,
+                align_items: AlignItems::Start,
+                padding: UiRect::all(MARGIN),
+                row_gap: MARGIN,
                 ..Default::default()
-            };
-
-            command.spawn((
-                NodeBundle {
-                    style: style.clone(),
-                    // a `NodeBundle` is transparent by default, so to see the image we have to its color to `WHITE`
-                    background_color: Color::WHITE.into(),
-                    ..default()
-                },
-                UiImage::new(get_image_handle(&asset_server, platform, control)),
-                platform,
-            ));
-
-            // Adjust for text styling
-            style.left = Val::Px(SIZE + (MARGIN * 2.0));
-            style.width = Val::Px(400.0);
-            style.bottom = Val::Px(i as f32 * (SIZE + MARGIN) - (SIZE / 4.0));
-
-            // Do only once
-            if i == 0 {
-                command.spawn((TextBundle::from_section(
-                    format!("{control}"),
-                    TextStyle {
-                        font: asset_server.load(DEFAULT_FONT_PATH),
-                        font_size: 20.0,
+            },
+            ..Default::default()
+        })
+        .with_children(|builder| {
+            for platform in ControlPlatform::iter() {
+                for control in ControlIntention::iter() {
+                    let style = Style {
+                        flex_direction: FlexDirection::Row,
+                        align_items: AlignItems::Center,
+                        display: if platform == ControlPlatform::Pc {
+                            bevy::ui::Display::default()
+                        } else {
+                            bevy::ui::Display::None
+                        },
                         ..Default::default()
-                    },
-                )
-                .with_style(style),));
+                    };
+
+                    builder
+                        .spawn((
+                            NodeBundle {
+                                style,
+                                ..Default::default()
+                            },
+                            platform,
+                        ))
+                        .with_children(|builder| {
+                            builder.spawn((
+                                NodeBundle {
+                                    style: Style {
+                                        width: SIZE,
+                                        height: SIZE,
+                                        ..Default::default()
+                                    },
+                                    background_color: Color::WHITE.into(),
+                                    ..Default::default()
+                                },
+                                UiImage::new(get_image_handle(&asset_server, platform, control)),
+                            ));
+
+                            builder.spawn(TextBundle::from_section(
+                                format!("{control}"),
+                                TextStyle {
+                                    font: asset_server.load(DEFAULT_FONT_PATH),
+                                    font_size: 16.0,
+                                    ..Default::default()
+                                },
+                            ));
+                        });
+                }
             }
-        }
-    }
+        });
 }
 
 pub fn update_controls_ui(
