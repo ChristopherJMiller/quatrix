@@ -1,5 +1,6 @@
 # Quatrix 🟦
-*An (eventual) puzzle game about rotating matrices*
+
+_An (eventual) puzzle game about rotating a grid_
 
 ## Setup (Nix)
 
