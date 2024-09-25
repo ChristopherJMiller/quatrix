@@ -64,9 +64,9 @@ fn update_gradient(
     mut time_passed: Local<f32>,
     mut loading_handle: Local<Option<Handle<Image>>>,
 ) {
-    *time_passed += time.delta_seconds();
+    *time_passed += time.delta_seconds() * 5.0;
 
-    if *time_passed >= 0.05 {
+    if *time_passed >= 0.1 {
         *loading_handle = Some(
             gradient_sprite
                 .single()
