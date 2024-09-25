@@ -4,7 +4,7 @@ use bevy::{
     window::{PresentMode, WindowTheme},
     winit::WinitSettings,
 };
-use game::{settings::Resolution, GamePlugins};
+use game::{settings::Resolution, ui::UiPlugins, GamePlugins};
 use menu::MenuPlugins;
 use state::AppState;
 
@@ -37,6 +37,7 @@ fn main() {
             ..default()
         }))
         .add_plugins(GamePlugins)
+        .add_plugins(UiPlugins)
         .add_plugins(MenuPlugins)
         .add_systems(Startup, setup_camera)
         .add_systems(Update, make_visible)

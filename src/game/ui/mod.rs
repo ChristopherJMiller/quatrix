@@ -1,7 +1,9 @@
 mod control;
+mod score_effect;
 
-use bevy::prelude::*;
+use bevy::{app::PluginGroupBuilder, prelude::*};
 use control::{build_control_ui, update_controls_ui, ControlPlatform};
+use score_effect::{OnScoreEvent, ScoreEffectPlugin};
 
 use crate::state::AppState;
 
@@ -13,11 +15,50 @@ pub const DEFAULT_FONT_PATH: &'static str = "fonts/OxygenMono-Regular.ttf";
 pub struct ScoreText;
 
 #[derive(Default, Component)]
+pub struct ScoreTextContainer;
+
+#[derive(Default, Component)]
 pub struct GameOverText;
 
-fn display_scoring(state: Res<GameState>, mut text: Query<&mut Text, With<ScoreText>>) {
-    let mut text = text.single_mut();
-    text.sections[0].value = format!("{:0>9}0", state.data_board.score());
+#[derive(Default)]
+struct LocalScoreboardState {
+    pub first_time_set: bool,
+    pub current: usize,
+    pub target: usize,
+    pub timer: f32,
+}
+
+fn display_scoring(
+    state: Res<GameState>,
+    time: Res<Time>,
+    mut current_state: Local<LocalScoreboardState>,
+    mut text: Query<&mut Text, With<ScoreText>>,
+    mut score_effect: EventWriter<OnScoreEvent>,
+) {
+    let state_score = state.data_board.score();
+    if state_score > current_state.target {
+        let diff = state_score - current_state.target;
+        score_effect.send(OnScoreEvent(diff));
+        current_state.target = state_score;
+    }
+
+    if !current_state.first_time_set {
+        current_state.first_time_set = true;
+        let mut text = text.single_mut();
+        text.sections[0].value = format!("{:0>9}0", 0);
+    }
+
+    // Score is always monotonically increasing, so this logic assumes always going up
+    if current_state.target > current_state.current {
+        current_state.timer += time.delta_seconds();
+
+        if current_state.timer >= 0.25 {
+            current_state.timer = 0.0;
+            current_state.current += 1;
+            let mut text = text.single_mut();
+            text.sections[0].value = format!("{:0>9}0", current_state.current);
+        }
+    }
 }
 
 fn display_game_over(state: Res<GameState>, mut text: Query<&mut Text, With<GameOverText>>) {
@@ -30,24 +71,30 @@ fn display_game_over(state: Res<GameState>, mut text: Query<&mut Text, With<Game
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn((
-        TextBundle::from_section(
-            "Score",
-            TextStyle {
-                font: asset_server.load(DEFAULT_FONT_PATH),
-                font_size: 32.0,
-                ..default()
+    commands
+        .spawn(NodeBundle {
+            style: Style {
+                flex_direction: FlexDirection::Column,
+                align_content: AlignContent::End,
+                margin: UiRect::horizontal(Val::Px(3.0)),
+                ..Default::default()
             },
-        )
-        .with_text_justify(JustifyText::Left)
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            top: Val::Px(10.0),
-            left: Val::Px(10.0),
-            ..default()
-        }),
-        ScoreText,
-    ));
+            ..Default::default()
+        })
+        .insert(ScoreTextContainer)
+        .with_children(|builder| {
+            builder.spawn((
+                TextBundle::from_section(
+                    "Score",
+                    TextStyle {
+                        font: asset_server.load(DEFAULT_FONT_PATH),
+                        font_size: 32.0,
+                        ..default()
+                    },
+                ),
+                ScoreText,
+            ));
+        });
 
     commands.spawn((
         TextBundle::from_section(
@@ -69,7 +116,17 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     ));
 }
 
-pub struct UiPlugin;
+pub struct UiPlugins;
+
+impl PluginGroup for UiPlugins {
+    fn build(self) -> PluginGroupBuilder {
+        let group = PluginGroupBuilder::start::<Self>();
+
+        group.add(UiPlugin).add(ScoreEffectPlugin)
+    }
+}
+
+struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {

@@ -24,8 +24,8 @@ pub enum ControlIntention {
 impl Display for ControlIntention {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            ControlIntention::ShiftUp => write!(f, "Shift Block Clockwise"),
-            ControlIntention::ShiftDown => write!(f, "Shift Block Counter Clockwise"),
+            ControlIntention::ShiftUp => write!(f, "Shift Block +"),
+            ControlIntention::ShiftDown => write!(f, "Shift Block -"),
             ControlIntention::RotateLeft => write!(f, "Rotate Board Counter Clockwise"),
             ControlIntention::RotateRight => write!(f, "Rotate Board Clockwise"),
         }

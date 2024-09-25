@@ -64,6 +64,7 @@ fn update_gradient(
     mut time_passed: Local<f32>,
     mut loading_handle: Local<Option<Handle<Image>>>,
 ) {
+    // TODO time pass multiplier based on score??? move faster as you get higher score (or maybe abstract to level or something)
     *time_passed += time.delta_seconds() * 5.0;
 
     if *time_passed >= 0.1 {
