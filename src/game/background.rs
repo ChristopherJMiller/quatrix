@@ -18,7 +18,7 @@ impl GradientBackground {
 
         let scale = 0.05;
 
-        let ns = noise::OpenSimplex::new(self.0 * seed);
+        let ns = noise::OpenSimplex::new(self.0 + seed);
         let mut imgbuf = image::ImageBuffer::new(32, 32);
 
         for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
