@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 use bevy::prelude::*;
 use strum::{EnumIter, IntoEnumIterator};
 
-use crate::game::ui::DEFAULT_FONT_PATH;
+use crate::{game::ui::DEFAULT_FONT_PATH, state::AppState};
 
 #[derive(Component, EnumIter, Debug, Clone, Copy, PartialEq, Eq, Hash, States, Default)]
 pub enum ControlPlatform {
@@ -137,17 +137,24 @@ pub fn build_control_ui(mut commands: Commands, asset_server: Res<AssetServer>) 
 }
 
 pub fn update_controls_ui(
+    state: Res<State<AppState>>,
     mut control_ui: Query<(&mut Style, &ControlPlatform)>,
     mut transitions: EventReader<StateTransitionEvent<ControlPlatform>>,
+    mut last_queued: Local<Option<ControlPlatform>>,
 ) {
+    // Always track the last transition
     for transition in transitions.read() {
-        let active = transition.after;
+        *last_queued = Some(transition.after);
+    }
 
-        for (mut style, platform) in &mut control_ui {
-            if platform == &active {
-                style.display = bevy::ui::Display::DEFAULT;
-            } else {
-                style.display = bevy::ui::Display::None;
+    if *state.get() == AppState::InGame {
+        if let Some(active) = last_queued.take() {
+            for (mut style, platform) in &mut control_ui {
+                if platform == &active {
+                    style.display = bevy::ui::Display::DEFAULT;
+                } else {
+                    style.display = bevy::ui::Display::None;
+                }
             }
         }
     }

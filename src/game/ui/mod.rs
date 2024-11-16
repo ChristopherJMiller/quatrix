@@ -2,10 +2,11 @@ mod control;
 mod score_effect;
 
 use bevy::{app::PluginGroupBuilder, prelude::*};
-use control::{build_control_ui, update_controls_ui, ControlPlatform};
+use control::{build_control_ui, update_controls_ui};
 use score_effect::{OnScoreEvent, ScoreEffectPlugin};
 
 use crate::state::AppState;
+pub use control::ControlPlatform;
 
 use super::board::state::{GameMode, GameState};
 
@@ -135,10 +136,7 @@ impl Plugin for UiPlugin {
                 PostUpdate,
                 (display_scoring, display_game_over).run_if(in_state(AppState::InGame)),
             )
-            .add_systems(
-                Update,
-                update_controls_ui.run_if(in_state(AppState::InGame)),
-            )
+            .add_systems(Update, update_controls_ui)
             .init_state::<ControlPlatform>();
     }
 }
