@@ -1,4 +1,5 @@
 {
   "editor.formatOnSave": true,
+  "nixEnvSelector.suggestion": false,
   "nixEnvSelector.nixFile": "${workspaceFolder}/default.nix"
 }
