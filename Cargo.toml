@@ -21,6 +21,7 @@ bevy = { version = "0.13.2", default-features = false, features = [
     "png",
     "hdr",
     "x11",
+    "wayland",
     "bevy_gizmos",
     "android_shared_stdcxx",
     "tonemapping_luts",
@@ -40,3 +41,6 @@ anyhow = "1"
 [profile.release]
 strip = true
 lto = true
+
+[[example]]
+name = "song_comp"

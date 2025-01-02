@@ -5,16 +5,10 @@ use bevy::{
     winit::WinitSettings,
 };
 use bevy_kira_audio::AudioPlugin;
-use game::{settings::Resolution, ui::UiPlugins, GamePlugins};
-use menu::MenuPlugins;
-use music::MusicPlugin;
-use state::AppState;
-
-mod game;
-mod logic;
-mod menu;
-mod music;
-mod state;
+use quatrix::game::{settings::Resolution, ui::UiPlugins, GamePlugins};
+use quatrix::menu::MenuPlugins;
+use quatrix::music::MusicPlugin;
+use quatrix::state::AppState;
 
 fn main() {
     App::new()

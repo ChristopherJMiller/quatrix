@@ -11,9 +11,16 @@ let
       "rust-analyzer"
     ];
   };
+  buildInputs = (import ./nix/inputs.nix pkgs).buildInputs;
 in
 
 pkgs.mkShell {
-  buildInputs = (import ./nix/inputs.nix pkgs).buildInputs ++ [ rust ];  
+  inherit buildInputs;
+  nativeBuildInputs = [
+    pkgs.pkg-config
+    rust
+  ];
+  LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath buildInputs;
+
   RUST_BACKTRACE = 1;
 }
