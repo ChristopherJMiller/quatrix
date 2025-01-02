@@ -6,7 +6,27 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.13.2"
+bevy = { version = "0.13.2", default-features = false, features = [
+    "bevy_asset",
+    "bevy_gilrs",
+    "bevy_scene",
+    "bevy_winit",
+    "bevy_core_pipeline",
+    "bevy_pbr",
+    "bevy_render",
+    "bevy_sprite",
+    "bevy_text",
+    "bevy_ui",
+    "multi-threaded",
+    "png",
+    "hdr",
+    "x11",
+    "bevy_gizmos",
+    "android_shared_stdcxx",
+    "tonemapping_luts",
+    "webgl2",
+    "bevy_debug_stepping",
+] }
 nalgebra = "0.32.5"
 thiserror = "1"
 rand = "0.8.5"
@@ -14,6 +34,7 @@ colorgrad = "0.6.2"
 noise = "0.9"
 image = "0.24"
 strum = { version = "0.26", features = ["derive"] }
+bevy_kira_audio = { version = "0.19", features = ["wav"] }
 
 [profile.release]
 strip = true

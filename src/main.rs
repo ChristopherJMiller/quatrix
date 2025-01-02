@@ -4,13 +4,16 @@ use bevy::{
     window::{PresentMode, WindowTheme},
     winit::WinitSettings,
 };
+use bevy_kira_audio::AudioPlugin;
 use game::{settings::Resolution, ui::UiPlugins, GamePlugins};
 use menu::MenuPlugins;
+use music::MusicPlugin;
 use state::AppState;
 
 mod game;
 mod logic;
 mod menu;
+mod music;
 mod state;
 
 fn main() {
@@ -36,6 +39,7 @@ fn main() {
             }),
             ..default()
         }))
+        .add_plugins((AudioPlugin, MusicPlugin))
         .add_plugins(GamePlugins)
         .add_plugins(UiPlugins)
         .add_plugins(MenuPlugins)
