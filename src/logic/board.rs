@@ -5,15 +5,25 @@ use super::{error::GameError, insertion::InsertionDirection};
 
 #[derive(Debug, Clone)]
 pub struct GameBoard {
+    /// Playing Board
     board: DMatrix<u8>,
+    /// Queued Board Rotations, every increment is a 90 degree turn.
+    /// Positive is clockwise, negative, is counter-clockwise.
+    ///
+    /// This is cleared when preparing the next drop.
     offset: i8,
+    /// A copy of the playing board with offset operations reversed.
+    /// This should be used when displaying the board graphically and applying the rotations
+    /// via graphical transformations (like rotating game pieces)
     display_board: DMatrix<u8>,
+    /// Enables row/col clearing
     rows_clearing: bool,
-
+    /// The current score on the board
     score: usize,
 }
 
 impl GameBoard {
+    /// Constructs a square game board of `n` size on each side
     pub fn new(n: usize) -> Self {
         Self {
             board: DMatrix::zeros(n, n),
@@ -24,23 +34,29 @@ impl GameBoard {
         }
     }
 
+    /// Enables row clearing on the game board
     pub fn with_rows_clearing(mut self) -> Self {
         self.rows_clearing = true;
         self
     }
 
+    /// The `n` dimension of the board
     pub fn width(&self) -> usize {
         self.board.ncols()
     }
 
+    /// The current game board. This has all rotation logic applied through it
+    /// as the game is played.
     pub fn board(&self) -> &DMatrix<u8> {
         &self.board
     }
 
+    /// The game board to be displayed. This has no rotation logic applied to it.
     pub fn display_board(&self) -> &DMatrix<u8> {
         &self.display_board
     }
 
+    /// The current score
     pub fn score(&self) -> usize {
         self.score
     }
@@ -111,6 +127,7 @@ impl GameBoard {
         Ok(pos)
     }
 
+    /// Returns whether a row is full.
     fn check_row(&self, insertion_direction: InsertionDirection, index: usize) -> bool {
         match insertion_direction {
             InsertionDirection::FromTop | InsertionDirection::FromBottom => {
@@ -124,6 +141,7 @@ impl GameBoard {
         }
     }
 
+    /// Determines if any rows or colmns are full, and then scores (and clear if enabled).
     fn check_full_rows(&mut self, insertion_direction: InsertionDirection, index: usize) {
         let mut rows = Vec::new();
         let mut cols = Vec::new();
@@ -183,6 +201,7 @@ impl GameBoard {
         }
     }
 
+    /// Rotates the board to the clockwise logically
     fn rotate_board_right(mut board: DMatrix<u8>) -> DMatrix<u8> {
         board.transpose_mut();
 
@@ -194,11 +213,13 @@ impl GameBoard {
         board
     }
 
+    /// Rotates the board clockwise
     pub fn rotate_right(&mut self) {
         self.board = Self::rotate_board_right(self.board.clone());
         self.update_display_board(1);
     }
 
+    /// Rotates the board to the counter-clockwise logically
     fn rotate_board_left(mut board: DMatrix<u8>) -> DMatrix<u8> {
         let width = board.ncols();
         let half_width = width / 2;
@@ -210,11 +231,16 @@ impl GameBoard {
         board
     }
 
+    /// Rotates the board to the counter-clockwise
     pub fn rotate_left(&mut self) {
         self.board = Self::rotate_board_left(self.board.clone());
         self.update_display_board(-1);
     }
 
+    /// Updates the display board based on a number of changes to the game board.
+    /// Changes are in units of 90 degrees. Clockwise is positive, counter-clockwise is negative.
+    ///
+    /// Changes are summed into offset as a cache.
     fn update_display_board(&mut self, change: i8) {
         self.offset += change;
 
