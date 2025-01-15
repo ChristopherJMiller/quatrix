@@ -1,7 +1,10 @@
+use bevy::math::FloatExt;
+
 /// Represents an instance of game scoring
 ///
 /// Game scoring is performed every time a player drops a block and clears
 /// a row or column. The score increases based on a series of multipliers.
+#[derive(Debug, Clone)]
 pub struct GameScore {
     /// Raw accumulated score.
     ///
@@ -66,6 +69,11 @@ impl GameScore {
         self.drop_timer.pass_time(dt_secs);
     }
 
+    /// Resets the drop timer
+    pub fn reset_drop_timer(&mut self) {
+        self.drop_timer.reset();
+    }
+
     /// Gets the current score
     pub fn score(&self) -> u64 {
         self.score
@@ -77,18 +85,23 @@ impl GameScore {
     }
 
     /// Calculates the next rank up score
-    fn next_rank_score(current_rank: u32) -> u64 {
+    fn next_rank_score(current_rank: u64) -> u64 {
         10 * current_rank.pow(2)
     }
 
-    /// Adds score with all the extra multipliers.
-    ///
     /// Increases the current standard multiplier before scoring, which decays over time.
-    pub fn add_score(&mut self, number_of_row_cols_cleared: u32) {
-        self.mult += (number_of_row_cols_cleared as f32).powf(2.0);
+    ///
+    /// Multiplier increases happen from clearing rows or columns
+    pub fn add_mult(&mut self, total_cleared: u32) {
+        println!("mult cleared {total_cleared}");
+        self.mult += (total_cleared as f32).powf(2.0);
+    }
 
+    /// Adds score with all the extra multipliers. Points can be gained from dropping blocks or from clearing rows
+    pub fn add_score(&mut self, points: u32) {
         let score_delta =
             points as f32 * self.drop_timer.mult() * self.mult * self.rank_mult.unwrap_or(1.0);
+
         let score_delta = score_delta.round() as u64;
 
         self.rank_buffer += score_delta;
@@ -96,7 +109,7 @@ impl GameScore {
         if self.rank_buffer >= self.next_rank {
             self.rank_buffer = self.rank_buffer.saturating_sub(self.next_rank as u64);
             self.rank += 1;
-            self.next_rank = Self::next_rank_score(self.rank);
+            self.next_rank = Self::next_rank_score(self.rank as u64);
         }
 
         self.score += score_delta;
@@ -117,6 +130,7 @@ impl GameScore {
 /// Given a maximum grantable multiplier and timer,
 /// can calculate a scoring multiplier based on how long it took
 /// for the player to drop a block.
+#[derive(Debug, Clone)]
 pub struct DropTimer {
     /// The maximum multiplier value
     max_mult: f32,
@@ -149,6 +163,9 @@ impl DropTimer {
 
     /// Gets the current
     pub fn mult(&self) -> f32 {
-        self.current_remaining * self.max_mult
+        1.0.lerp(
+            self.max_mult,
+            self.current_remaining / self.start_timer_secs,
+        )
     }
 }

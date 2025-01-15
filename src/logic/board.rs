@@ -1,7 +1,7 @@
 use bevy::log::debug;
 use nalgebra::{DMatrix, RowDVector};
 
-use super::{error::GameError, insertion::InsertionDirection};
+use super::{error::GameError, insertion::InsertionDirection, score::GameScore};
 
 #[derive(Debug, Clone)]
 pub struct GameBoard {
@@ -19,7 +19,7 @@ pub struct GameBoard {
     /// Enables row/col clearing
     rows_clearing: bool,
     /// The current score on the board
-    score: usize,
+    score: GameScore,
 }
 
 impl GameBoard {
@@ -30,7 +30,7 @@ impl GameBoard {
             offset: 0,
             display_board: DMatrix::zeros(n, n),
             rows_clearing: false,
-            score: 0,
+            score: GameScore::new(),
         }
     }
 
@@ -57,8 +57,8 @@ impl GameBoard {
     }
 
     /// The current score
-    pub fn score(&self) -> usize {
-        self.score
+    pub fn score(&self) -> &GameScore {
+        &self.score
     }
 
     /// Returns the coordinate where the tile was placed (column, row)
@@ -116,11 +116,13 @@ impl GameBoard {
             }
         };
 
-        self.score += 1;
+        self.score.add_score(1);
 
         if self.rows_clearing {
             self.check_full_rows(insertion_direction, index);
         }
+
+        self.score.reset_drop_timer();
 
         self.update_display_board(0);
 
@@ -178,12 +180,12 @@ impl GameBoard {
         }
 
         let dim = self.board.ncols();
-        let score_delta = (0..(rows.len() + cols.len()))
-            .enumerate()
-            .map(|(i, _)| (i + 1) * dim)
-            .fold(0, usize::saturating_add);
+        let total_cleared = rows.len() + cols.len();
 
-        self.score = self.score.saturating_add(score_delta);
+        if total_cleared > 0 {
+            self.score.add_mult(total_cleared as u32);
+            self.score.add_score((total_cleared * dim) as u32);
+        }
 
         for index in rows {
             self.board.set_row(
@@ -553,33 +555,57 @@ mod tests {
         let mut game_board = GameBoard::new(3).with_rows_clearing();
 
         game_board.place(0).unwrap();
-        assert_eq!(game_board.score, 1);
+        // With maximum drop mult (5) * 1 point (no other mults)
+        assert_eq!(game_board.score.score(), 5);
+
+        // Pass the time
+        game_board.score.update(1000.0);
 
         game_board.place(0).unwrap();
+        assert_eq!(game_board.score.score(), 6);
+
+        // Pass the time
+        game_board.score.update(1000.0);
+
         game_board.place(0).unwrap();
 
-        // 1 + 1 + clearing(3)
-        assert_eq!(game_board.score, 6);
+        // cleared row, mult increased by 1 to 2
+        // so 1 + (clearing row of 3 * mult of 2) = delta of 7
+        assert_eq!(game_board.score.score(), 13);
     }
 
     #[test]
     pub fn verify_scoring_2() {
         let mut game_board = GameBoard::new(3).with_rows_clearing();
 
+        // Pass the time
+        game_board.score.update(1000.0);
+
         game_board.place(0).unwrap();
+
+        // Pass the time
+        game_board.score.update(1000.0);
+
         game_board.place(0).unwrap();
-        // 2 points placed
+
+        // Pass the time
+        game_board.score.update(1000.0);
 
         game_board.place(11).unwrap();
-        game_board.place(11).unwrap();
-        // 2 points placed
+
+        // Pass the time
+        game_board.score.update(1000.0);
 
         game_board.place(11).unwrap();
-        // 1 point placed
 
-        // 2 clears at once = 3 + 2 * 3 = 9
-        // 2 + 2 + 1 + 9 = 14
+        // Pass the time
+        game_board.score.update(1000.0);
 
-        assert_eq!(game_board.score, 14);
+        game_board.place(11).unwrap();
+
+        // 2 clears at once, mult is now 5 (1 + 4)
+        // dim of 3 is 6 cleared, so 6 * 1 (time passed) * 5 added to a score of 5
+
+        assert_eq!(game_board.score.score(), 35);
     }
 }

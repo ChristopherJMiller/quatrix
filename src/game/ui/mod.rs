@@ -24,8 +24,8 @@ pub struct GameOverText;
 #[derive(Default)]
 struct LocalScoreboardState {
     pub first_time_set: bool,
-    pub current: usize,
-    pub target: usize,
+    pub current: u64,
+    pub target: u64,
     pub timer: f32,
 }
 
@@ -36,9 +36,9 @@ fn display_scoring(
     mut text: Query<&mut Text, With<ScoreText>>,
     mut score_effect: EventWriter<OnScoreEvent>,
 ) {
-    let state_score = state.data_board.score();
+    let state_score = state.data_board.score().score();
     if state_score > current_state.target {
-        let diff = state_score - current_state.target;
+        let diff = state_score.saturating_sub(current_state.target);
         score_effect.send(OnScoreEvent(diff));
         current_state.target = state_score;
     }

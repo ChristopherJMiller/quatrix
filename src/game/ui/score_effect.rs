@@ -50,7 +50,7 @@ fn animate_fading_text(
 }
 
 #[derive(Event, Default)]
-pub struct OnScoreEvent(pub usize);
+pub struct OnScoreEvent(pub u64);
 
 pub fn on_score_event_effect(
     mut reader: EventReader<OnScoreEvent>,
