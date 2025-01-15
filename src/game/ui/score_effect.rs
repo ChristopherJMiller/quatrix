@@ -16,8 +16,8 @@ impl FadingText {
         builder.spawn((
             TextBundle::from_section(self.text.clone(), self.style.clone()).with_style(Style {
                 position_type: PositionType::Absolute,
-                top: Val::Px(35.0),
-                right: Val::Px(0.0),
+                top: Val::Px(55.0),
+                left: Val::Px(10.0),
                 ..Default::default()
             }),
             self,
@@ -51,6 +51,9 @@ fn animate_fading_text(
 
 #[derive(Event, Default)]
 pub struct OnScoreEvent(pub u64);
+
+#[derive(Event, Default)]
+pub struct ResetScoreboard;
 
 pub fn on_score_event_effect(
     mut reader: EventReader<OnScoreEvent>,
@@ -87,6 +90,7 @@ pub struct ScoreEffectPlugin;
 impl Plugin for ScoreEffectPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<OnScoreEvent>()
+            .add_event::<ResetScoreboard>()
             .add_systems(Update, (on_score_event_effect, animate_fading_text));
     }
 }

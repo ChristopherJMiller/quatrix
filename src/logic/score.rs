@@ -84,6 +84,11 @@ impl GameScore {
         self.rank
     }
 
+    /// The percentage of way to the next rank, 100% being 1.0
+    pub fn percent_to_next_rank(&self) -> f32 {
+        self.rank_buffer as f32 / self.next_rank.saturating_sub(self.rank_buffer).max(1) as f32
+    }
+
     /// Calculates the next rank up score
     fn next_rank_score(current_rank: u64) -> u64 {
         10 * current_rank.pow(2)
@@ -93,7 +98,6 @@ impl GameScore {
     ///
     /// Multiplier increases happen from clearing rows or columns
     pub fn add_mult(&mut self, total_cleared: u32) {
-        println!("mult cleared {total_cleared}");
         self.mult += (total_cleared as f32).powf(2.0);
     }
 

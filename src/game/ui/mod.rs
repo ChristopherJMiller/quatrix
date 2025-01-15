@@ -1,8 +1,13 @@
 mod control;
+mod rank;
 mod score_effect;
+
+use bevy_progressbar::{ProgressBar, ProgressBarBundle, ProgressBarMaterial};
+pub use score_effect::ResetScoreboard;
 
 use bevy::{app::PluginGroupBuilder, prelude::*};
 use control::{build_control_ui, update_controls_ui};
+use rank::{display_rank, display_rank_progress, RankProgress, RankText};
 use score_effect::{OnScoreEvent, ScoreEffectPlugin};
 
 use crate::state::AppState;
@@ -11,6 +16,7 @@ pub use control::ControlPlatform;
 use super::board::state::{GameMode, GameState};
 
 pub const DEFAULT_FONT_PATH: &'static str = "fonts/OxygenMono-Regular.ttf";
+pub const RANK_FONT_PATH: &'static str = "fonts/ASIX-FOUNDER.otf";
 
 #[derive(Default, Component)]
 pub struct ScoreText;
@@ -35,7 +41,12 @@ fn display_scoring(
     mut current_state: Local<LocalScoreboardState>,
     mut text: Query<&mut Text, With<ScoreText>>,
     mut score_effect: EventWriter<OnScoreEvent>,
+    mut reset_scoreboard: EventReader<ResetScoreboard>,
 ) {
+    if reset_scoreboard.read().next().is_some() {
+        *current_state = LocalScoreboardState::default();
+    }
+
     let state_score = state.data_board.score().score();
     if state_score > current_state.target {
         let diff = state_score.saturating_sub(current_state.target);
@@ -53,7 +64,7 @@ fn display_scoring(
     if current_state.target > current_state.current {
         current_state.timer += time.delta_seconds();
 
-        if current_state.timer >= 0.25 {
+        if current_state.timer >= 0.1 {
             current_state.timer = 0.0;
             current_state.current += 1;
             let mut text = text.single_mut();
@@ -71,19 +82,50 @@ fn display_game_over(state: Res<GameState>, mut text: Query<&mut Text, With<Game
     };
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut materials: ResMut<Assets<ProgressBarMaterial>>,
+) {
     commands
         .spawn(NodeBundle {
             style: Style {
                 flex_direction: FlexDirection::Column,
                 align_content: AlignContent::End,
-                margin: UiRect::horizontal(Val::Px(3.0)),
+                margin: UiRect::axes(Val::Px(10.0), Val::Px(10.0)),
                 ..Default::default()
             },
             ..Default::default()
         })
         .insert(ScoreTextContainer)
         .with_children(|builder| {
+            builder.spawn((
+                TextBundle::from_section(
+                    "Rank",
+                    TextStyle {
+                        font: asset_server.load(RANK_FONT_PATH),
+                        font_size: 32.0,
+                        ..default()
+                    },
+                ),
+                RankText,
+            ));
+
+            let style = Style {
+                position_type: PositionType::Relative,
+                width: Val::Px(300.0),
+                height: Val::Px(12.0),
+                ..Default::default()
+            };
+
+            builder
+                .spawn(ProgressBarBundle::new(
+                    style,
+                    ProgressBar::new(vec![(1, Color::WHITE)]),
+                    &mut materials,
+                ))
+                .insert(RankProgress);
+
             builder.spawn((
                 TextBundle::from_section(
                     "Score",
@@ -134,7 +176,13 @@ impl Plugin for UiPlugin {
         app.add_systems(OnEnter(AppState::InGame), (setup, build_control_ui))
             .add_systems(
                 PostUpdate,
-                (display_scoring, display_game_over).run_if(in_state(AppState::InGame)),
+                (
+                    display_scoring,
+                    display_game_over,
+                    display_rank,
+                    display_rank_progress,
+                )
+                    .run_if(in_state(AppState::InGame)),
             )
             .add_systems(Update, update_controls_ui)
             .init_state::<ControlPlatform>();

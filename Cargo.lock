@@ -309,6 +309,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy-progressbar"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "540c48a83dfd4523953b7f5b85edf6d1627e2037a10b09627348018a27f55c3b"
+dependencies = [
+ "bevy_app",
+ "bevy_asset",
+ "bevy_ecs",
+ "bevy_reflect",
+ "bevy_render",
+ "bevy_ui",
+ "bevy_utils",
+]
+
+[[package]]
 name = "bevy_a11y"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2972,6 +2987,7 @@ name = "quatrix"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "bevy-progressbar",
  "bevy_kira_audio",
  "colorgrad",
  "image",

@@ -20,6 +20,7 @@ impl PluginGroup for GamePlugins {
         let group = PluginGroupBuilder::start::<Self>();
 
         group
+            .add(bevy_progressbar::ProgressBarPlugin)
             .add(BackgroundPlugin)
             .add(SettingsPlugin)
             .add(ControlsPlugin)

@@ -2,7 +2,10 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::{
-    game::{board::effects::ElasticForce, controls::RestartPressed, settings::GameSettings},
+    game::{
+        board::effects::ElasticForce, controls::RestartPressed, settings::GameSettings,
+        ui::ResetScoreboard,
+    },
     logic::{board::GameBoard, error::GameError, insertion::InsertionDirection},
     state::AppState,
 };
@@ -169,11 +172,13 @@ fn handle_block_drops(
 fn handle_restart(
     mut game_state: ResMut<GameState>,
     mut restart_pressed: EventReader<RestartPressed>,
+    mut reset_scoreboard: EventWriter<ResetScoreboard>,
 ) {
     let pressed = restart_pressed.read().next().is_some();
     restart_pressed.clear();
 
     if pressed && game_state.mode == GameMode::GameOver {
+        reset_scoreboard.send_default();
         *game_state = GameState::new(game_state.data_board.width());
     }
 }
