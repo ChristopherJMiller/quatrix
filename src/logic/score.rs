@@ -19,6 +19,12 @@ pub struct GameScore {
     rank_mult: Option<f32>,
     /// The active rank boost timer. Decays with time and floors to 0.
     rank_boost_timer: f32,
+    /// The rank buffer. As scores are increased, the buffer is also increased.
+    ///
+    /// Once the buffer reached a certain value related to the rank, it is consumed and a rank up occurs
+    rank_buffer: u64,
+    /// The score requires before the next rank is reached
+    next_rank: u64,
     /// An active multiplier on score. Decays with time.
     mult: f32,
     /// A rate modifier for the multiplier to declay.
@@ -35,6 +41,8 @@ impl GameScore {
             rank: 1,
             rank_mult: None,
             rank_boost_timer: 0.0,
+            rank_buffer: 0,
+            next_rank: Self::next_rank_score(1),
             mult: 1.0,
             mult_decay_rate: 3.0,
             drop_timer: DropTimer::new(5.0, 10.0),
@@ -43,8 +51,18 @@ impl GameScore {
 
     /// Update with elapsed delta time secs
     pub fn update(&mut self, dt_secs: f32) {
-        self.rank_boost_timer = (self.rank_boost_timer - dt_secs).max(0.0);
+        // Decrease timer if any value on it, and turn off rank mult if timer runs out
+        if self.rank_boost_timer >= f32::EPSILON {
+            self.rank_boost_timer = (self.rank_boost_timer - dt_secs).max(0.0);
+            if self.rank_boost_timer <= f32::EPSILON {
+                self.rank_mult = None;
+            }
+        }
+
+        // Decay standard multiplier
         self.mult = (self.mult - dt_secs * (self.mult_decay_rate)).max(1.0);
+
+        // Pass time on drop timer
         self.drop_timer.pass_time(dt_secs);
     }
 
@@ -58,13 +76,28 @@ impl GameScore {
         self.rank
     }
 
+    /// Calculates the next rank up score
+    fn next_rank_score(current_rank: u32) -> u64 {
+        10 * current_rank.pow(2)
+    }
+
     /// Adds score with all the extra multipliers.
-    pub fn add_score(&mut self, points: u32) {
+    ///
+    /// Increases the current standard multiplier before scoring, which decays over time.
+    pub fn add_score(&mut self, number_of_row_cols_cleared: u32) {
+        self.mult += (number_of_row_cols_cleared as f32).powf(2.0);
+
         let score_delta =
             points as f32 * self.drop_timer.mult() * self.mult * self.rank_mult.unwrap_or(1.0);
         let score_delta = score_delta.round() as u64;
 
-        // TODO increase rank
+        self.rank_buffer += score_delta;
+
+        if self.rank_buffer >= self.next_rank {
+            self.rank_buffer = self.rank_buffer.saturating_sub(self.next_rank as u64);
+            self.rank += 1;
+            self.next_rank = Self::next_rank_score(self.rank);
+        }
 
         self.score += score_delta;
     }
