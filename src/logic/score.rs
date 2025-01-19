@@ -47,7 +47,7 @@ impl GameScore {
             rank_buffer: 0,
             next_rank: Self::next_rank_score(1),
             mult: 1.0,
-            mult_decay_rate: 3.0,
+            mult_decay_rate: 0.1,
             drop_timer: DropTimer::new(5.0, 10.0),
         }
     }
@@ -63,7 +63,7 @@ impl GameScore {
         }
 
         // Decay standard multiplier
-        self.mult = (self.mult - dt_secs * (self.mult_decay_rate)).max(1.0);
+        self.mult = (self.mult - (dt_secs * self.mult_decay_rate)).max(1.0);
 
         // Pass time on drop timer
         self.drop_timer.pass_time(dt_secs);
@@ -101,10 +101,14 @@ impl GameScore {
         self.mult += (total_cleared as f32).powf(2.0);
     }
 
+    /// Returns the current combined multiplier
+    pub fn current_mult(&self) -> f32 {
+        self.drop_timer.mult() * self.mult * self.rank_mult.unwrap_or(1.0)
+    }
+
     /// Adds score with all the extra multipliers. Points can be gained from dropping blocks or from clearing rows
     pub fn add_score(&mut self, points: u32) {
-        let score_delta =
-            points as f32 * self.drop_timer.mult() * self.mult * self.rank_mult.unwrap_or(1.0);
+        let score_delta = points as f32 * self.current_mult();
 
         let score_delta = score_delta.round() as u64;
 

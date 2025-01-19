@@ -28,6 +28,7 @@ impl InsertionDirection {
         }
     }
 
+    /// Calculations what size the insertion is from given a board and a slot
     pub fn for_board_insertion(
         board: &DMatrix<u8>,
         slot: usize,

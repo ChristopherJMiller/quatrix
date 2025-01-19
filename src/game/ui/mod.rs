@@ -1,8 +1,10 @@
 mod control;
+pub mod multiplier;
 mod rank;
 mod score_effect;
 
 use bevy_progressbar::{ProgressBar, ProgressBarBundle, ProgressBarMaterial};
+use multiplier::{display_mult, MultiplierText, MultiplierTextContainer};
 pub use score_effect::ResetScoreboard;
 
 use bevy::{app::PluginGroupBuilder, prelude::*};
@@ -87,6 +89,32 @@ fn setup(
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<ProgressBarMaterial>>,
 ) {
+    // Multiplier Text that follows block placement
+    commands
+        .spawn(NodeBundle {
+            style: Style {
+                position_type: PositionType::Absolute,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert(MultiplierTextContainer)
+        .with_children(|builder| {
+            builder.spawn((
+                TextBundle::from_section(
+                    "0x",
+                    TextStyle {
+                        font: asset_server.load(RANK_FONT_PATH),
+                        font_size: 24.0,
+                        ..default()
+                    },
+                )
+                .with_text_justify(JustifyText::Center),
+                MultiplierText,
+            ));
+        });
+
+    // Top Left Score Bundle
     commands
         .spawn(NodeBundle {
             style: Style {
@@ -99,17 +127,36 @@ fn setup(
         })
         .insert(ScoreTextContainer)
         .with_children(|builder| {
-            builder.spawn((
-                TextBundle::from_section(
-                    "Rank",
-                    TextStyle {
-                        font: asset_server.load(RANK_FONT_PATH),
-                        font_size: 32.0,
-                        ..default()
+            builder
+                .spawn(NodeBundle {
+                    style: Style {
+                        flex_direction: FlexDirection::Row,
+                        ..Default::default()
                     },
-                ),
-                RankText,
-            ));
+                    ..Default::default()
+                })
+                .with_children(|builder| {
+                    builder.spawn(TextBundle::from_section(
+                        "Rank ",
+                        TextStyle {
+                            font: asset_server.load(RANK_FONT_PATH),
+                            font_size: 32.0,
+                            ..default()
+                        },
+                    ));
+
+                    builder.spawn((
+                        TextBundle::from_section(
+                            "0",
+                            TextStyle {
+                                font: asset_server.load(RANK_FONT_PATH),
+                                font_size: 32.0,
+                                ..default()
+                            },
+                        ),
+                        RankText,
+                    ));
+                });
 
             let style = Style {
                 position_type: PositionType::Relative,
@@ -181,6 +228,7 @@ impl Plugin for UiPlugin {
                     display_game_over,
                     display_rank,
                     display_rank_progress,
+                    display_mult,
                 )
                     .run_if(in_state(AppState::InGame)),
             )

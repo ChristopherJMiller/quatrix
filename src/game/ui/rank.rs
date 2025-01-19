@@ -8,7 +8,7 @@ pub struct RankText;
 
 pub fn display_rank(state: Res<GameState>, mut text: Query<&mut Text, With<RankText>>) {
     let mut text = text.single_mut();
-    text.sections[0].value = format!("Rank {}", state.data_board.score().rank());
+    text.sections[0].value = format!("{}", state.data_board.score().rank());
 }
 
 #[derive(Component)]

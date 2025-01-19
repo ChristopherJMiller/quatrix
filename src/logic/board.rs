@@ -61,6 +61,11 @@ impl GameBoard {
         &self.score
     }
 
+    /// The current score
+    pub fn score_mut(&mut self) -> &mut GameScore {
+        &mut self.score
+    }
+
     /// Returns the coordinate where the tile was placed (column, row)
     pub fn place(&mut self, slot: usize) -> Result<(usize, usize), GameError> {
         let insertion_direction = InsertionDirection::for_board_insertion(&self.board, slot)?;

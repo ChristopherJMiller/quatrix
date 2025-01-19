@@ -2,6 +2,8 @@ use bevy::{asset::LoadState, prelude::*, render::render_asset::RenderAssetUsages
 use image::DynamicImage;
 use noise::NoiseFn;
 
+use super::board::state::GameState;
+
 /// Represents a sprite that will be a gradient background that spans the camera
 #[derive(Component)]
 pub struct GradientBackground(pub u32);
@@ -58,22 +60,26 @@ fn update_gradient_size(
 }
 
 fn update_gradient(
+    // Gradient Image as background
     mut gradient_sprite: Query<(&mut Handle<Image>, &GradientBackground)>,
     asset_server: Res<AssetServer>,
     time: Res<Time>,
+    // Counts how much time has passed, which acts as a "rerender frame rate" for the background
     mut time_passed: Local<f32>,
+    // Handle to wait to be loaded before replacing the background
     mut loading_handle: Local<Option<Handle<Image>>>,
+    // The seed to add to slowly via game state
+    mut seed: Local<u32>,
+    // Game state used to accelerate the seed
+    game_state: Res<GameState>,
 ) {
-    // TODO time pass multiplier based on score??? move faster as you get higher score (or maybe abstract to level or something)
     *time_passed += time.delta_seconds() * 5.0;
 
+    *seed +=
+        (time.delta_seconds() * game_state.data_board.score().current_mult()).floor() as u32 * 100;
+
     if *time_passed >= 0.1 {
-        *loading_handle = Some(
-            gradient_sprite
-                .single()
-                .1
-                .load(&asset_server, time.elapsed().as_secs() as u32),
-        )
+        *loading_handle = Some(gradient_sprite.single().1.load(&asset_server, *seed))
     }
 
     if loading_handle.as_ref().is_some_and(|x| {

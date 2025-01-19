@@ -73,6 +73,7 @@ impl GameState {
         }
     }
 
+    /// Calculated the drop location given the next drop and the offset
     pub fn drop(&self) -> usize {
         let max_index = (self.data_board.board().ncols() * 4).saturating_sub(1);
         if self.next_drop == 0 && self.offset == -1 {
@@ -183,6 +184,14 @@ fn handle_restart(
     }
 }
 
+/// Passes time on the GameScore system inside the data board.
+fn pass_score_time(mut game_state: ResMut<GameState>, time: Res<Time>) {
+    game_state
+        .data_board
+        .score_mut()
+        .update(time.delta_seconds());
+}
+
 pub struct GameStatePlugin;
 
 impl Plugin for GameStatePlugin {
@@ -190,7 +199,10 @@ impl Plugin for GameStatePlugin {
         let default_settings = GameSettings::default();
 
         app.insert_resource(GameState::new(default_settings.board_dim as usize))
-            .add_systems(Update, handle_restart.run_if(in_state(AppState::InGame)))
+            .add_systems(
+                Update,
+                (handle_restart, pass_score_time).run_if(in_state(AppState::InGame)),
+            )
             .add_systems(
                 PostUpdate,
                 (update_board_children, handle_block_drops).run_if(in_state(AppState::InGame)),
