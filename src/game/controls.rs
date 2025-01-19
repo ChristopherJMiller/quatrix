@@ -28,6 +28,9 @@ pub struct RotateRightPressed;
 pub struct PrintHistoryPressed;
 
 #[derive(Event, Default)]
+pub struct RankBoostPressed;
+
+#[derive(Event, Default)]
 pub struct RestartPressed;
 
 /// Tracks the type of discovered gamepads
@@ -86,6 +89,7 @@ fn handle_input(
     mut rotate_right: EventWriter<RotateRightPressed>,
     mut print_history: EventWriter<PrintHistoryPressed>,
     mut restart: EventWriter<RestartPressed>,
+    mut rank_boost: EventWriter<RankBoostPressed>,
 ) {
     for event in keyboard_input_events.read() {
         if !event.state.is_pressed() {
@@ -110,6 +114,9 @@ fn handle_input(
             }
             KeyCode::Digit0 => {
                 print_history.send_default();
+            }
+            KeyCode::ControlRight | KeyCode::KeyE => {
+                rank_boost.send_default();
             }
             KeyCode::KeyR => {
                 restart.send_default();
@@ -145,6 +152,9 @@ fn handle_input(
             (ButtonState::Pressed, GamepadButtonType::Start) => {
                 restart.send_default();
             }
+            (ButtonState::Pressed, GamepadButtonType::South) => {
+                rank_boost.send_default();
+            }
             _ => {}
         }
     }
@@ -160,6 +170,7 @@ impl Plugin for ControlsPlugin {
             .add_event::<RotateRightPressed>()
             .add_event::<PrintHistoryPressed>()
             .add_event::<RestartPressed>()
+            .add_event::<RankBoostPressed>()
             .init_resource::<GamepadDiscoveryTable>()
             .add_systems(
                 PreUpdate,

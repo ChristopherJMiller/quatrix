@@ -15,6 +15,7 @@ pub enum ControlPlatform {
 
 #[derive(EnumIter, Debug, Clone, Copy)]
 pub enum ControlIntention {
+    RankBoost,
     RotateRight,
     RotateLeft,
     ShiftDown,
@@ -28,6 +29,7 @@ impl Display for ControlIntention {
             ControlIntention::ShiftDown => write!(f, "Shift Block -"),
             ControlIntention::RotateLeft => write!(f, "Rotate Board Counter Clockwise"),
             ControlIntention::RotateRight => write!(f, "Rotate Board Clockwise"),
+            ControlIntention::RankBoost => write!(f, "Use Rank to Boost Multiplier"),
         }
     }
 }
@@ -42,6 +44,7 @@ fn get_image_handle(
         (ControlPlatform::Pc, ControlIntention::ShiftDown) => "sprite/controls/pc/keyboard_s.png",
         (ControlPlatform::Pc, ControlIntention::RotateLeft) => "sprite/controls/pc/keyboard_a.png",
         (ControlPlatform::Pc, ControlIntention::RotateRight) => "sprite/controls/pc/keyboard_d.png",
+        (ControlPlatform::Pc, ControlIntention::RankBoost) => "sprite/controls/pc/keyboard_e.png",
         (ControlPlatform::Steamdeck, ControlIntention::ShiftUp) => {
             "sprite/controls/steamdeck/steamdeck_dpad_up_outline.png"
         }
@@ -54,6 +57,9 @@ fn get_image_handle(
         (ControlPlatform::Steamdeck, ControlIntention::RotateRight) => {
             "sprite/controls/steamdeck/steamdeck_button_r1.png"
         }
+        (ControlPlatform::Steamdeck, ControlIntention::RankBoost) => {
+            "sprite/controls/steamdeck/steamdeck_button_a.png"
+        }
         (ControlPlatform::Xbox, ControlIntention::ShiftUp) => {
             "sprite/controls/xbox/xbox_dpad_up_outline.png"
         }
@@ -63,6 +69,9 @@ fn get_image_handle(
         (ControlPlatform::Xbox, ControlIntention::RotateLeft) => "sprite/controls/xbox/xbox_lb.png",
         (ControlPlatform::Xbox, ControlIntention::RotateRight) => {
             "sprite/controls/xbox/xbox_rb.png"
+        }
+        (ControlPlatform::Xbox, ControlIntention::RankBoost) => {
+            "sprite/controls/xbox/xbox_button_a.png"
         }
     };
 

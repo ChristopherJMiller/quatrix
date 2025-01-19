@@ -22,6 +22,8 @@ pub struct GameScore {
     rank_mult: Option<f32>,
     /// The active rank boost timer. Decays with time and floors to 0.
     rank_boost_timer: f32,
+    /// The time the previous rank boost started at. Used for progress bar calculations
+    rank_boost_timer_max: f32,
     /// The rank buffer. As scores are increased, the buffer is also increased.
     ///
     /// Once the buffer reached a certain value related to the rank, it is consumed and a rank up occurs
@@ -44,11 +46,12 @@ impl GameScore {
             rank: 1,
             rank_mult: None,
             rank_boost_timer: 0.0,
+            rank_boost_timer_max: 0.0,
             rank_buffer: 0,
             next_rank: Self::next_rank_score(1),
             mult: 1.0,
             mult_decay_rate: 0.1,
-            drop_timer: DropTimer::new(5.0, 10.0),
+            drop_timer: DropTimer::new(4.0, 10.0),
         }
     }
 
@@ -59,6 +62,8 @@ impl GameScore {
             self.rank_boost_timer = (self.rank_boost_timer - dt_secs).max(0.0);
             if self.rank_boost_timer <= f32::EPSILON {
                 self.rank_mult = None;
+                self.rank_boost_timer = 0.0;
+                self.rank_boost_timer_max = 0.0;
             }
         }
 
@@ -103,7 +108,7 @@ impl GameScore {
 
     /// Returns the current combined multiplier
     pub fn current_mult(&self) -> f32 {
-        self.drop_timer.mult() * self.mult * self.rank_mult.unwrap_or(1.0)
+        self.drop_timer.mult() + self.mult + self.rank_mult.unwrap_or_default()
     }
 
     /// Adds score with all the extra multipliers. Points can be gained from dropping blocks or from clearing rows
@@ -123,12 +128,25 @@ impl GameScore {
         self.score += score_delta;
     }
 
+    /// Returns the percentage of time remaining on the rank boost. Used by percent bars
+    pub fn current_rank_boost_percentage(&self) -> Option<f32> {
+        if self.rank_mult.is_some() {
+            Some(self.rank_boost_timer / self.rank_boost_timer_max)
+        } else {
+            None
+        }
+    }
+
     /// Consume a rank and activate a boost based on the rank
-    pub fn rank_boost(&mut self) {
-        if self.rank > 1 {
+    pub fn rank_boost(&mut self) -> bool {
+        if self.rank > 1 && self.rank_mult.is_none() {
+            self.rank_mult = Some(self.rank as f32);
             self.rank -= 1;
             self.rank_boost_timer = self.rank as f32 * 5.0;
-            self.rank_mult = Some(1.0 + (self.rank as f32 * 0.1));
+            self.rank_boost_timer_max = self.rank_boost_timer;
+            true
+        } else {
+            false
         }
     }
 }
@@ -171,7 +189,7 @@ impl DropTimer {
 
     /// Gets the current
     pub fn mult(&self) -> f32 {
-        1.0.lerp(
+        0.0.lerp(
             self.max_mult,
             self.current_remaining / self.start_timer_secs,
         )

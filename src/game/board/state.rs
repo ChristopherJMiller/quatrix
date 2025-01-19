@@ -3,7 +3,9 @@ use rand::Rng;
 
 use crate::{
     game::{
-        board::effects::ElasticForce, controls::RestartPressed, settings::GameSettings,
+        board::effects::ElasticForce,
+        controls::{RankBoostPressed, RestartPressed},
+        settings::GameSettings,
         ui::ResetScoreboard,
     },
     logic::{board::GameBoard, error::GameError, insertion::InsertionDirection},
@@ -192,6 +194,22 @@ fn pass_score_time(mut game_state: ResMut<GameState>, time: Res<Time>) {
         .update(time.delta_seconds());
 }
 
+fn handle_rank_boost(
+    mut game_state: ResMut<GameState>,
+    mut rank_boost_pressed: EventReader<RankBoostPressed>,
+) {
+    let pressed = rank_boost_pressed.read().next().is_some();
+    rank_boost_pressed.clear();
+
+    if pressed {
+        if game_state.data_board.score_mut().rank_boost() {
+            info!("Boosted!")
+        } else {
+            info!("Not enough ranks to boost")
+        }
+    }
+}
+
 pub struct GameStatePlugin;
 
 impl Plugin for GameStatePlugin {
@@ -201,7 +219,8 @@ impl Plugin for GameStatePlugin {
         app.insert_resource(GameState::new(default_settings.board_dim as usize))
             .add_systems(
                 Update,
-                (handle_restart, pass_score_time).run_if(in_state(AppState::InGame)),
+                (handle_restart, pass_score_time, handle_rank_boost)
+                    .run_if(in_state(AppState::InGame)),
             )
             .add_systems(
                 PostUpdate,

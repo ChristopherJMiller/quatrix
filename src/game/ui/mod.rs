@@ -4,7 +4,10 @@ mod rank;
 mod score_effect;
 
 use bevy_progressbar::{ProgressBar, ProgressBarBundle, ProgressBarMaterial};
-use multiplier::{display_mult, MultiplierText, MultiplierTextContainer};
+use multiplier::{
+    display_mult, display_rank_boost_mult, MultiplierText, MultiplierTextContainer,
+    RankBoostDuration,
+};
 pub use score_effect::ResetScoreboard;
 
 use bevy::{app::PluginGroupBuilder, prelude::*};
@@ -94,6 +97,7 @@ fn setup(
         .spawn(NodeBundle {
             style: Style {
                 position_type: PositionType::Absolute,
+                flex_direction: FlexDirection::Column,
                 ..Default::default()
             },
             ..Default::default()
@@ -112,6 +116,20 @@ fn setup(
                 .with_text_justify(JustifyText::Center),
                 MultiplierText,
             ));
+
+            let style = Style {
+                width: Val::Px(64.0),
+                height: Val::Px(12.0),
+                ..Default::default()
+            };
+
+            builder
+                .spawn(ProgressBarBundle::new(
+                    style,
+                    ProgressBar::new(vec![(1, Color::ORANGE)]),
+                    &mut materials,
+                ))
+                .insert(RankBoostDuration);
         });
 
     // Top Left Score Bundle
@@ -229,6 +247,7 @@ impl Plugin for UiPlugin {
                     display_rank,
                     display_rank_progress,
                     display_mult,
+                    display_rank_boost_mult,
                 )
                     .run_if(in_state(AppState::InGame)),
             )
