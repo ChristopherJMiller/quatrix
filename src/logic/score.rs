@@ -86,7 +86,7 @@ impl GameScore {
 
     /// The percentage of way to the next rank, 100% being 1.0
     pub fn percent_to_next_rank(&self) -> f32 {
-        self.rank_buffer as f32 / self.next_rank.saturating_sub(self.rank_buffer).max(1) as f32
+        (self.rank_buffer as f32 / self.next_rank as f32).min(1.0)
     }
 
     /// Calculates the next rank up score
