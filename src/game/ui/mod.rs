@@ -12,10 +12,13 @@ pub use score_effect::ResetScoreboard;
 
 use bevy::{app::PluginGroupBuilder, prelude::*};
 use control::{build_control_ui, update_controls_ui};
-use rank::{display_rank, display_rank_progress, RankProgress, RankText};
+use rank::{detect_rank_up, display_rank, display_rank_progress, RankProgress, RankText};
 use score_effect::{OnScoreEvent, ScoreEffectPlugin};
 
-use crate::state::AppState;
+use crate::{
+    audio::{PlaySoundEffect, SoundEffect},
+    state::AppState,
+};
 pub use control::ControlPlatform;
 
 use super::board::state::{GameMode, GameState};
@@ -47,6 +50,7 @@ fn display_scoring(
     mut text: Query<&mut Text, With<ScoreText>>,
     mut score_effect: EventWriter<OnScoreEvent>,
     mut reset_scoreboard: EventReader<ResetScoreboard>,
+    mut sfx: EventWriter<PlaySoundEffect>,
 ) {
     if reset_scoreboard.read().next().is_some() {
         *current_state = LocalScoreboardState::default();
@@ -54,6 +58,10 @@ fn display_scoring(
 
     let state_score = state.data_board.score().score();
     if state_score > current_state.target {
+        // There is no better spot to detect that things have been scored...
+        // I really should've been an event hook system
+        sfx.send(PlaySoundEffect(SoundEffect::Clear));
+
         let diff = state_score.saturating_sub(current_state.target);
         score_effect.send(OnScoreEvent(diff));
         current_state.target = state_score;
@@ -248,6 +256,7 @@ impl Plugin for UiPlugin {
                     display_rank_progress,
                     display_mult,
                     display_rank_boost_mult,
+                    detect_rank_up,
                 )
                     .run_if(in_state(AppState::InGame)),
             )

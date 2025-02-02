@@ -1,5 +1,7 @@
 use bevy::app::{PluginGroup, PluginGroupBuilder};
 
+use crate::audio::AudioPlugin;
+
 use self::{
     background::BackgroundPlugin, board::BoardPlugin, controls::ControlsPlugin, debug::DebugPlugin,
     settings::SettingsPlugin, spawn::SpawnPlugin,
@@ -21,6 +23,8 @@ impl PluginGroup for GamePlugins {
 
         group
             .add(bevy_progressbar::ProgressBarPlugin)
+            .add(bevy_kira_audio::AudioPlugin)
+            .add(AudioPlugin)
             .add(BackgroundPlugin)
             .add(SettingsPlugin)
             .add(ControlsPlugin)

@@ -8,6 +8,7 @@ use game::{settings::Resolution, ui::UiPlugins, GamePlugins};
 use menu::MenuPlugins;
 use state::AppState;
 
+mod audio;
 mod game;
 mod logic;
 mod menu;

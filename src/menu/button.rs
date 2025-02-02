@@ -1,6 +1,10 @@
 use bevy::prelude::*;
 
-use crate::{game::ui::DEFAULT_FONT_PATH, state::AppState};
+use crate::{
+    audio::{PlaySoundEffect, SoundEffect},
+    game::ui::DEFAULT_FONT_PATH,
+    state::AppState,
+};
 
 use super::MainMenuElement;
 
@@ -29,15 +33,18 @@ pub fn hover_buttons(
         (&Interaction, &mut BackgroundColor),
         (Changed<Interaction>, With<Button>),
     >,
+    mut sfx: EventWriter<PlaySoundEffect>,
 ) {
     for (interaction, mut color) in &mut interaction_query {
         match *interaction {
             Interaction::Pressed => {
                 *color = PRESSED_BUTTON.into();
                 next_state.set(AppState::InGame);
+                sfx.send(PlaySoundEffect(SoundEffect::UiClick));
             }
             Interaction::Hovered => {
                 *color = HOVERED_BUTTON.into();
+                sfx.send(PlaySoundEffect(SoundEffect::UiHover));
             }
             Interaction::None => {
                 *color = NORMAL_BUTTON.into();

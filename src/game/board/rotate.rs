@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
+    audio::{PlaySoundEffect, SoundEffect},
     game::controls::{MinusOffsetPressed, PlusOffsetPressed},
     logic::insertion::InsertionDirection,
     state::AppState,
@@ -60,6 +61,7 @@ fn handle_rotate_events(
     mut game_state: ResMut<GameState>,
     mut rotate_left: EventReader<RotateLeftPressed>,
     mut rotate_right: EventReader<RotateRightPressed>,
+    mut sfx: EventWriter<PlaySoundEffect>,
     board: Query<Entity, (With<Board>, Without<RotateBoard>)>,
 ) {
     let left_received = rotate_left.read().next().is_some();
@@ -83,6 +85,8 @@ fn handle_rotate_events(
         };
 
         if let Some(angle) = angle {
+            sfx.send(PlaySoundEffect(SoundEffect::Rotate));
+
             commands
                 .entity(ent)
                 .insert(RotateBoard::new_from_current_angle(

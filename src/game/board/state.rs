@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::{
+    audio::{PlaySoundEffect, SoundEffect},
     game::{
         board::effects::ElasticForce,
         controls::{RankBoostPressed, RestartPressed},
@@ -197,13 +198,15 @@ fn pass_score_time(mut game_state: ResMut<GameState>, time: Res<Time>) {
 fn handle_rank_boost(
     mut game_state: ResMut<GameState>,
     mut rank_boost_pressed: EventReader<RankBoostPressed>,
+    mut sfx: EventWriter<PlaySoundEffect>,
 ) {
     let pressed = rank_boost_pressed.read().next().is_some();
     rank_boost_pressed.clear();
 
     if pressed {
         if game_state.data_board.score_mut().rank_boost() {
-            info!("Boosted!")
+            info!("Boosted!");
+            sfx.send(PlaySoundEffect(SoundEffect::RankBoost));
         } else {
             info!("Not enough ranks to boost")
         }

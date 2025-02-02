@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::state::AppState;
+use crate::{audio::PlaySoundEffect, state::AppState};
 
 #[derive(Component)]
 pub struct TranslateEffect {
@@ -42,6 +42,7 @@ impl TranslateEffect {
 fn handle_translate_effect(
     mut commands: Commands,
     mut query: Query<(Entity, &mut Transform, &mut TranslateEffect)>,
+    mut sfx: EventWriter<PlaySoundEffect>,
     time: Res<Time>,
 ) {
     query
@@ -50,6 +51,7 @@ fn handle_translate_effect(
             if let Some(new_location) = translate_effect.update(time.delta_seconds()) {
                 trans.translation = new_location.extend(trans.translation.z);
             } else {
+                sfx.send(PlaySoundEffect(crate::audio::SoundEffect::Drop));
                 if translate_effect.delete_on_complete {
                     commands.entity(ent).despawn_recursive();
                 } else {

@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 use bevy_progressbar::ProgressBar;
 
-use crate::game::board::state::GameState;
+use crate::{
+    audio::{PlaySoundEffect, SoundEffect},
+    game::board::state::GameState,
+};
 
 #[derive(Component)]
 pub struct RankText;
@@ -31,4 +34,18 @@ pub fn display_rank_progress(
     };
 
     bar.set_progress(progress);
+}
+
+pub fn detect_rank_up(
+    mut rank: Local<u32>,
+    state: Res<GameState>,
+    mut sfx: EventWriter<PlaySoundEffect>,
+) {
+    let game_rank = state.data_board.score().rank();
+    if *rank != game_rank {
+        if game_rank > *rank {
+            sfx.send(PlaySoundEffect(SoundEffect::LevelUp));
+        }
+        *rank = game_rank;
+    }
 }
