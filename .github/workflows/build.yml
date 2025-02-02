@@ -63,7 +63,7 @@ jobs:
       - name: Copy In Assets
         run: cp -r assets install/bin/assets
       - name: Upload build artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: install/bin/
           name: ${{ matrix.channel }}
@@ -82,7 +82,7 @@ jobs:
         uses: olegtarasov/get-tag@v2.1.2
         id: get_version
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.channel }}
           path: build
